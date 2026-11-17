@@ -83,15 +83,20 @@ impl Parser {
             });
         }
 
-        // Check for '->' or 'to' or 'as' or 'in' (when used as conversion)
-        let is_arrow = self.peek() == Some(&Token::Arrow);
-        let is_in_conversion = if self.peek() == Some(&Token::In) {
-            matches!(self.tokens.get(self.pos + 1), Some(Token::Ident(_)) | Some(Token::In))
-        } else {
-            false
-        };
+        // Check for '->' or 'to' or 'as' or 'in' (when used as conversion), allowing chained conversions
+        let mut cur_expr = expr;
+        loop {
+            let is_arrow = self.peek() == Some(&Token::Arrow);
+            let is_in_conversion = if self.peek() == Some(&Token::In) {
+                matches!(self.tokens.get(self.pos + 1), Some(Token::Ident(_)) | Some(Token::In))
+            } else {
+                false
+            };
 
-        if is_arrow || is_in_conversion {
+            if !(is_arrow || is_in_conversion) {
+                break;
+            }
+
             self.advance();
             let mut target_str = String::new();
             while let Some(tok) = self.peek() {
@@ -128,22 +133,20 @@ impl Parser {
                 return Err("Expected target unit or base after 'to'/'->'".to_string());
             }
 
-            match target_str.to_lowercase().as_str() {
-                "hex" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 16 }),
-                "bin" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 2 }),
-                "oct" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 8 }),
-                "dec" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 10 }),
-                "factors" | "factor" => return Ok(Expr::Call("factor".to_string(), vec![expr])),
-                _ => {
-                    return Ok(Expr::Convert {
-                        expr: Box::new(expr),
-                        target: target_str,
-                    });
-                }
-            }
+            cur_expr = match target_str.to_lowercase().as_str() {
+                "hex" => Expr::ToBase { expr: Box::new(cur_expr), base: 16 },
+                "bin" => Expr::ToBase { expr: Box::new(cur_expr), base: 2 },
+                "oct" => Expr::ToBase { expr: Box::new(cur_expr), base: 8 },
+                "dec" => Expr::ToBase { expr: Box::new(cur_expr), base: 10 },
+                "factors" | "factor" => Expr::Call("factor".to_string(), vec![cur_expr]),
+                _ => Expr::Convert {
+                    expr: Box::new(cur_expr),
+                    target: target_str,
+                },
+            };
         }
 
-        Ok(expr)
+        Ok(cur_expr)
     }
 
     fn parse_binary(&mut self, min_prec: u8) -> Result<Expr, String> {
@@ -380,27 +383,32 @@ impl Parser {
             }
             Token::Minus => {
                 if let Some(Token::Number(s)) = self.peek() {
-                    let s_neg = format!("-{}", s);
-                    self.advance();
-                    let mut expr = if s_neg.contains('.') || s_neg.contains('e') || s_neg.contains('E') {
-                        let f = s_neg.parse::<f64>().map_err(|e| e.to_string())?;
-                        Expr::Number(NumericValue::from_f64(f))
+                    if self.tokens.get(self.pos + 1) == Some(&Token::Caret) {
+                        let inner = self.parse_binary(9)?;
+                        Ok(Expr::Unary(UnaryOp::Neg, Box::new(inner)))
                     } else {
-                        let b = BigInt::from_str(&s_neg).map_err(|e| e.to_string())?;
-                        Expr::Number(NumericValue::Exact(BigRational::from_integer(b)))
-                    };
-
-                    // Check for immediate percent postfix
-                    if self.peek() == Some(&Token::PercentPostfix) {
+                        let s_neg = format!("-{}", s);
                         self.advance();
-                        expr = Expr::Binary(
-                            Box::new(expr),
-                            BinaryOp::Div,
-                            Box::new(Expr::Number(NumericValue::from_i64(100))),
-                        );
-                    }
+                        let mut expr = if s_neg.contains('.') || s_neg.contains('e') || s_neg.contains('E') {
+                            let f = s_neg.parse::<f64>().map_err(|e| e.to_string())?;
+                            Expr::Number(NumericValue::from_f64(f))
+                        } else {
+                            let b = BigInt::from_str(&s_neg).map_err(|e| e.to_string())?;
+                            Expr::Number(NumericValue::Exact(BigRational::from_integer(b)))
+                        };
 
-                    Ok(expr)
+                        // Check for immediate percent postfix
+                        if self.peek() == Some(&Token::PercentPostfix) {
+                            self.advance();
+                            expr = Expr::Binary(
+                                Box::new(expr),
+                                BinaryOp::Div,
+                                Box::new(Expr::Number(NumericValue::from_i64(100))),
+                            );
+                        }
+
+                        Ok(expr)
+                    }
                 } else {
                     let inner = self.parse_binary(9)?;
                     Ok(Expr::Unary(UnaryOp::Neg, Box::new(inner)))

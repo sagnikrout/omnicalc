@@ -260,7 +260,19 @@ impl Evaluator {
             Expr::Call(name, args) => self.eval_call(name, args),
             Expr::Convert { expr, target } => {
                 let q = self.eval_quantity(expr)?;
-                q.to_unit(target, &self.registry)
+                let target_def = self.registry.lookup(target)
+                    .ok_or_else(|| format!("Unknown target unit: '{}'", target))?;
+                if q.dimension != target_def.dimension {
+                    return Err(format!(
+                        "Dimensional mismatch: cannot convert {} ({}) to '{}' ({})",
+                        q.format_plain(), q.dimension, target, target_def.dimension
+                    ));
+                }
+                Ok(Quantity {
+                    value: q.value,
+                    dimension: target_def.dimension,
+                    unit_str: Some(target_def.symbol),
+                })
             }
             Expr::ToBase { expr, .. } => self.eval_quantity(expr),
             Expr::Equation { .. } => Err("Equations cannot be evaluated as quantities".to_string()),
