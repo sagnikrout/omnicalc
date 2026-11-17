@@ -1,0 +1,1167 @@
+============================================================================
+OMNICALC DESTRUCTIVE TEST LOG
+Date: 2026-11-17T22:29:18+05:30
+Binary: /home/sagnik/code/omnicalc/target/release/omnicalc
+Binary size: 1994640 bytes
+============================================================================
+
+--- Section 1: Empty & Degenerate Input ---
+
+[T001] PASS    [EMPTY] Completely empty string
+         Input:    
+         Output:   Error: Empty input
+
+[T002] PASS    [EMPTY] Whitespace only
+         Input:       
+         Output:   Error: Empty input
+
+[T003] PASS    [EMPTY] Single newline
+         Input:    
+
+         Output:   Error: Empty input
+
+[T004] PASS    [EMPTY] Tab characters only
+         Input:    		
+         Output:   Error: Empty input
+
+--- Section 2: Basic Arithmetic ---
+
+[T005] PASS    [ARITH] Simple addition
+         Input:    2 + 3
+         Output:   5
+
+[T006] PASS    [ARITH] Simple subtraction
+         Input:    10 - 7
+         Output:   3
+
+[T007] PASS    [ARITH] Simple multiplication
+         Input:    6 * 7
+         Output:   42
+
+[T008] PASS    [ARITH] Simple division exact
+         Input:    10 / 2
+         Output:   5
+
+[T009] PASS    [ARITH] Rational result
+         Input:    1 / 3
+         Output:   1/3
+
+[T010] PASS    [ARITH] Negative number
+         Input:    -5
+         Output:   -5
+
+[T011] PASS    [ARITH] Double negative
+         Input:    --5
+         Output:   5
+
+[T012] PASS    [ARITH] Subtraction yielding negative
+         Input:    3 - 10
+         Output:   -7
+
+[T013] PASS    [ARITH] Zero
+         Input:    0
+         Output:   0
+
+[T014] PASS    [ARITH] Modulus
+         Input:    10 % 3
+         Output:   1
+
+[T015] PASS    [ARITH] Modulus zero divisor
+         Input:    10 % 0
+         Output:   Error: Division by zero in modulus
+
+[T016] PASS    [ARITH] Power
+         Input:    2^10
+         Output:   1024
+
+[T017] PASS    [ARITH] Power zero
+         Input:    5^0
+         Output:   1
+
+[T018] PASS    [ARITH] Power of zero
+         Input:    0^5
+         Output:   0
+
+[T019] PASS    [ARITH] Zero to zero (0^0)
+         Input:    0^0
+         Output:   1
+
+[T020] PASS    [ARITH] Negative power
+         Input:    2^-3
+         Output:   1/8
+
+[T021] PASS    [ARITH] Chained operations
+         Input:    2 + 3 * 4
+         Output:   14
+
+[T022] PASS    [ARITH] Left paren grouping
+         Input:    (2 + 3) * 4
+         Output:   20
+
+[T023] PASS    [ARITH] Nested parens
+         Input:    ((2 + 3) * (4 + 5))
+         Output:   45
+
+[T024] PASS    [ARITH] Deeply nested parens
+         Input:    ((((((1))))))
+         Output:   1
+
+[T025] PASS    [ARITH] Unbalanced left paren
+         Input:    (2 + 3
+         Output:   Error: Expected RParen, found end of input
+
+[T026] PASS    [ARITH] Unbalanced right paren
+         Input:    2 + 3)
+         Output:   Error: Unexpected trailing token: RParen
+
+[T027] PASS    [ARITH] Division by zero
+         Input:    1 / 0
+         Output:   Error: Division by zero
+
+[T028] PASS    [ARITH] Large integer
+         Input:    999999999999999999 + 1
+         Output:   1000000000000000000
+
+[T029] PASS    [ARITH] Very large power
+         Input:    2^64
+         Output:   18446744073709551616
+
+[T030] PASS    [ARITH] Huge power (potential hang)
+         Input:    2^1000
+         Output:   10715086071862673209484250490600018105614048117055336074437503883703510511249361224931983788156958581275946729175531468251871452856923140435984577574698574803934567774824230985421074605062371141877954182153046474983581941267398767559165543946077062914571196477686542167660429831652624386837205668069376
+
+[T031] PASS    [ARITH] Negative * negative
+         Input:    -3 * -4
+         Output:   12
+
+[T032] PASS    [ARITH] Double star power
+         Input:    2**10
+         Output:   1024
+
+--- Section 3: Floating Point ---
+
+[T033] PASS    [FLOAT] Basic float
+         Input:    1.5 + 2.5
+         Output:   4
+
+[T034] PASS    [FLOAT] Very small float
+         Input:    1e-300 + 1e-300
+         Output:   0
+
+[T035] PASS    [FLOAT] Very large float
+         Input:    1e308
+         Output:   100000000000000001097906362944045541740492309677311846336810682903157585404911491537163328978494688899061249669721172515611590283743140088328307009198146046031271664502933027185697489699588559043338384466165001178426897626212945177628091195786707458122783970171784415105291802893207873272974885715430223118336
+
+[T036] PASS    [FLOAT] Overflow float
+         Input:    1e308 * 10
+         Output:   inf
+
+[T037] PASS    [FLOAT] Underflow float
+         Input:    1e-308 / 1e308
+         Output:   0
+
+[T038] PASS    [FLOAT] Scientific notation
+         Input:    6.022e23
+         Output:   602200000000000027262976
+
+[T039] PASS    [FLOAT] Negative exponent
+         Input:    1.6e-19
+         Output:   0
+
+[T040] PASS    [FLOAT] Float precision 0.1+0.2
+         Input:    0.1 + 0.2
+         Output:   0.3
+
+[T041] PASS    [FLOAT] Leading decimal point
+         Input:    .5 + .5
+         Output:   Error: Unexpected character: '.' at position 0
+
+[T042] PASS    [FLOAT] Number with underscores
+         Input:    1_000_000
+         Output:   1000000
+
+[T043] PASS    [FLOAT] Only underscore in number
+         Input:    1__2
+         Output:   12
+
+--- Section 4: Base Conversions ---
+
+[T044] PASS    [BASE] Hex input
+         Input:    0xFF
+         Output:   255
+
+[T045] PASS    [BASE] Binary input
+         Input:    0b1010
+         Output:   10
+
+[T046] PASS    [BASE] Octal input
+         Input:    0o77
+         Output:   63
+
+[T047] PASS    [BASE] To hex
+         Input:    255 to hex
+         Output:   0xff
+
+[T048] PASS    [BASE] To bin
+         Input:    10 to bin
+         Output:   0b1010
+
+[T049] PASS    [BASE] To oct
+         Input:    63 to oct
+         Output:   0o77
+
+[T050] PASS    [BASE] To dec (identity)
+         Input:    42 to dec
+         Output:   42
+
+[T051] PASS    [BASE] Hex arithmetic
+         Input:    0xFF + 1
+         Output:   256
+
+[T052] PASS    [BASE] Binary arithmetic
+         Input:    0b1010 + 0b0101
+         Output:   15
+
+[T053] PASS    [BASE] Empty hex 0x
+         Input:    0x
+         Output:   Error: Invalid hex: cannot parse integer from empty string
+
+[T054] PASS    [BASE] Empty binary 0b
+         Input:    0b
+         Output:   Error: Invalid binary: cannot parse integer from empty string
+
+[T055] PASS    [BASE] Empty octal 0o
+         Input:    0o
+         Output:   Error: Invalid octal: cannot parse integer from empty string
+
+[T056] PASS    [BASE] Hex with underscores
+         Input:    0xFF_FF
+         Output:   65535
+
+[T057] PASS    [BASE] Negative to hex
+         Input:    -1 to hex
+         Output:   0x-1
+
+[T058] PASS    [BASE] Global base flag hex
+         Input:    255
+         Output:   0xff
+
+[T059] PASS    [BASE] Global base flag bin
+         Input:    10
+         Output:   0b1010
+
+--- Section 5: Bitwise ---
+
+[T060] PASS    [BITWISE] AND
+         Input:    0xFF & 0x0F
+         Output:   15
+
+[T061] PASS    [BITWISE] OR
+         Input:    0xF0 | 0x0F
+         Output:   255
+
+[T062] PASS    [BITWISE] XOR via caret
+         Input:    0xFF ^ 0x0F
+         Output:   1253437565941484265163826019287109375
+
+[T063] PASS    [BITWISE] Left shift
+         Input:    1 << 10
+         Output:   1024
+
+[T064] PASS    [BITWISE] Right shift
+         Input:    1024 >> 5
+         Output:   32
+
+[T065] PASS    [BITWISE] NOT (tilde)
+         Input:    ~0
+         Output:   -1
+
+[T066] PASS    [BITWISE] NOT 255
+         Input:    ~255
+         Output:   -256
+
+[T067] PASS    [BITWISE] Shift by 0
+         Input:    42 << 0
+         Output:   42
+
+[T068] PASS    [BITWISE] Shift by 63
+         Input:    1 << 63
+         Output:   -9223372036854775808
+
+[T069] PASS    [BITWISE] Large shift (overflow)
+         Input:    1 << 64
+         Output:   Error: Bit shift overflow: shift amount 64 exceeds maximum 63
+
+--- Section 6: Unit Conversions ---
+
+[T070] PASS    [UNITS] Meters to feet
+         Input:    1 m to ft
+         Output:   3.280839895 ft
+
+[T071] PASS    [UNITS] Feet to meters
+         Input:    1 ft to m
+         Output:   0.3048 m
+
+[T072] PASS    [UNITS] Km to miles
+         Input:    1 km to mi
+         Output:   0.6213711922 mi
+
+[T073] PASS    [UNITS] Celsius to Fahrenheit
+         Input:    100 degC to degF
+         Output:   212 degF
+
+[T074] PASS    [UNITS] Fahrenheit to Celsius
+         Input:    32 degF to degC
+         Output:   0 degC
+
+[T075] PASS    [UNITS] Celsius zero
+         Input:    0 degC to K
+         Output:   273.15 K
+
+[T076] PASS    [UNITS] Absolute zero
+         Input:    -273.15 degC to K
+         Output:   0 K
+
+[T077] PASS    [UNITS] Kg to pounds
+         Input:    1 kg to lb
+         Output:   2.2046226218 lb
+
+[T078] PASS    [UNITS] Joules to calories
+         Input:    1 J to cal
+         Output:   0.2390057361 cal
+
+[T079] PASS    [UNITS] KWh to joules
+         Input:    1 kWh to J
+         Output:   3600000 J
+
+[T080] PASS    [UNITS] Watts to horsepower
+         Input:    746 W to hp
+         Output:   1.0004024788 hp
+
+[T081] PASS    [UNITS] Atm to pascal
+         Input:    1 atm to Pa
+         Output:   101325 Pa
+
+[T082] PASS    [UNITS] Data: MB to GiB
+         Input:    1024 MB to GiB
+         Output:   0.9536743164 GiB
+
+[T083] PASS    [UNITS] Data: megabit
+         Input:    1 megabit to bit
+         Output:   1000000 bit
+
+[T084] PASS    [UNITS] Lightspeed constant c
+         Input:    1 ly to km
+         Output:   9460730472580.80078125 km
+
+[T085] PASS    [UNITS] Speed: kph to mph
+         Input:    100 kph to mph
+         Output:   62.1371192237 mph
+
+[T086] PASS    [UNITS] Feet-inches to cm
+         Input:    5'10" to cm
+         Output:   177.8 cm
+
+[T087] PASS    [UNITS] Currency EUR to USD
+         Input:    1 EUR to USD
+         Output:   1.038 USD
+
+[T088] PASS    [UNITS] Currency INR to USD
+         Input:    85.5 INR to USD
+         Output:   1 USD
+
+[T089] PASS    [UNITS] Unknown unit
+         Input:    1 flurb to m
+         Output:   Error: Unknown unit: 'flurb'
+
+[T090] PASS    [UNITS] Dimensional mismatch
+         Input:    1 m to s
+         Output:   Error: Dimensional mismatch: cannot convert 1 (L) to 's' (T)
+
+[T091] PASS    [UNITS] Dimensional mismatch add
+         Input:    5 m + 3 kg
+         Output:   Error: Type error: Dimensional mismatch in addition (L vs M)
+
+[T092] PASS    [UNITS] Zero conversion
+         Input:    0 km to m
+         Output:   0 m
+
+[T093] PASS    [UNITS] Negative temperature
+         Input:    -40 degC to degF
+         Output:   -40 degF
+
+[T094] PASS    [UNITS] Data rate bandwidth
+         Input:    1 Mbps * 60 s to megabit
+         Output:   60 megabits
+
+[T095] PASS    [UNITS] Compound: speed * time
+         Input:    60 kph * 2 hr to km
+         Output:   120 km
+
+--- Section 7: Uncertainty ---
+
+[T096] PASS    [UNCERT] Simple uncertainty
+         Input:    5±0.1
+         Output:   5.0000±0.1000
+
+[T097] PASS    [UNCERT] Uncertainty addition
+         Input:    (5±0.1) + (3±0.2)
+         Output:   8.0000±0.2236
+
+[T098] PASS    [UNCERT] Uncertainty multiplication
+         Input:    (5±0.1) * (3±0.2)
+         Output:   15.0000±1.0440
+
+[T099] PASS    [UNCERT] Uncertainty division
+         Input:    (10±0.5) / (2±0.1)
+         Output:   5.0000±0.3536
+
+[T100] PASS    [UNCERT] Zero uncertainty
+         Input:    5±0
+         Output:   5.0000±0.0000
+
+[T101] PASS    [UNCERT] Negative nominal
+         Input:    -5±0.1
+         Output:   -5.0000±0.1000
+
+[T102] PASS    [UNCERT] Uncertainty with units
+         Input:    (2±0.02 J) / (523±5 W) to ms
+         Output:   3.8241±0.0529 ms
+
+[T103] PASS    [UNCERT] Uncertainty +/- syntax
+         Input:    10+/-0.5
+         Output:   10.0000±0.5000
+
+[T104] PASS    [UNCERT] Zero nominal with error
+         Input:    0±0.5
+         Output:   0.0000±0.5000
+
+[T105] PASS    [UNCERT] Very large error
+         Input:    1±1e10
+         Output:   1.0000±10000000000.0000
+
+--- Section 8: Symbolic Differentiation ---
+
+[T106] PASS    [DIFF] Linear
+         Input:    diff(3x)
+         Output:   3
+
+[T107] PASS    [DIFF] Quadratic
+         Input:    diff(x^2)
+         Output:   2x
+
+[T108] PASS    [DIFF] Cubic
+         Input:    diff(x^3)
+         Output:   3 * x ^ 2
+
+[T109] PASS    [DIFF] Polynomial
+         Input:    diff(6x^2)
+         Output:   12x
+
+[T110] PASS    [DIFF] Constant
+         Input:    diff(42)
+         Output:   0
+
+[T111] PASS    [DIFF] sin
+         Input:    diff(sin(x))
+         Output:   cos(x)
+
+[T112] PASS    [DIFF] cos
+         Input:    diff(cos(x))
+         Output:   -sin(x)
+
+[T113] PASS    [DIFF] exp
+         Input:    diff(exp(x))
+         Output:   exp(x)
+
+[T114] PASS    [DIFF] ln
+         Input:    diff(ln(x))
+         Output:   1 / x
+
+[T115] PASS    [DIFF] Sum
+         Input:    diff(x^2 + 3x + 1)
+         Output:   2x + 3
+
+[T116] PASS    [DIFF] Product
+         Input:    diff(x * sin(x))
+         Output:   sin(x) + x * cos(x)
+
+[T117] PASS    [DIFF] Quotient
+         Input:    diff(x / sin(x))
+         Output:   sin(x) - x * cos(x) / sin(x) ^ 2
+
+[T118] PASS    [DIFF] Chain rule
+         Input:    diff(sin(x^2))
+         Output:   cos(x ^ 2) * 2x
+
+[T119] PASS    [DIFF] No variable (all constant)
+         Input:    diff(5 + 3)
+         Output:   0
+
+--- Section 9: Integration ---
+
+[T120] PASS    [INTEG] Polynomial
+         Input:    integrate(x^2; 0; 1)
+         Output:   0.333333
+
+[T121] PASS    [INTEG] Known integral 6x^2
+         Input:    integrate(6x^2; 1; 5)
+         Output:   248
+
+[T122] PASS    [INTEG] Sin from 0 to pi
+         Input:    integrate(sin(x); 0; 3.14159265)
+         Output:   2
+
+[T123] PASS    [INTEG] Constant function
+         Input:    integrate(1; 0; 10)
+         Output:   10
+
+[T124] PASS    [INTEG] Negative bounds
+         Input:    integrate(x; -5; 5)
+         Output:   0
+
+[T125] PASS    [INTEG] Reversed bounds
+         Input:    integrate(x^2; 5; 1)
+         Output:   -41.333333
+
+[T126] PASS    [INTEG] Zero-width interval
+         Input:    integrate(x; 3; 3)
+         Output:   0
+
+[T127] PASS    [INTEG] 1 arg only (error)
+         Input:    integrate(x)
+         Output:   Error: integrate requires 3 or 4 arguments: (expr; [var;] lower; upper)
+
+[T128] PASS    [INTEG] 2 args only (error)
+         Input:    integrate(x; 0)
+         Output:   Error: integrate requires 3 or 4 arguments: (expr; [var;] lower; upper)
+
+[T129] PASS    [INTEG] With explicit var
+         Input:    integrate(x^2; x; 0; 1)
+         Output:   0.333333
+
+--- Section 10: Equation Solving ---
+
+[T130] PASS    [SOLVE] Linear 2x=10
+         Input:    2x = 10
+         Output:   x = 5
+
+[T131] PASS    [SOLVE] Linear 2x+4=10
+         Input:    2x + 4 = 10
+         Output:   x = 3
+
+[T132] PASS    [SOLVE] Linear x-7=0
+         Input:    x - 7 = 0
+         Output:   x = 7
+
+[T133] PASS    [SOLVE] Zero LHS
+         Input:    0 = x
+         Output:   x = 0
+
+[T134] PASS    [SOLVE] Identity 0=0
+         Input:    0 = 0
+         Output:   Error: Equation has no unique solution (degenerate).
+
+[T135] PASS    [SOLVE] Contradiction 1=2
+         Input:    1 = 2
+         Output:   Error: Equation has no unique solution (degenerate).
+
+[T136] PASS    [SOLVE] Quadratic x^2=4
+         Input:    x^2 = 4
+         Output:   x = 2, -2
+
+--- Section 11: Factoring ---
+
+[T137] PASS    [FACTOR] Difference of squares
+         Input:    factor(x^2 - 9)
+         Output:   (x - 3)(x + 3)
+
+[T138] PASS    [FACTOR] Perfect square
+         Input:    factor(x^2 - 6x + 9)
+         Output:   (x - 3)^2
+
+[T139] PASS    [FACTOR] No real roots
+         Input:    factor(x^2 + 1)
+         Output:   x ^ 2 + 1
+
+[T140] PASS    [FACTOR] Linear
+         Input:    factor(2x + 4)
+         Output:   2x + 4
+
+[T141] PASS    [FACTOR] Constant
+         Input:    factor(42)
+         Output:   42
+
+--- Section 12: Math Functions ---
+
+[T142] PASS    [FUNC] sqrt(4)
+         Input:    sqrt(4)
+         Output:   2
+
+[T143] PASS    [FUNC] sqrt(2)
+         Input:    sqrt(2)
+         Output:   1.4142135624
+
+[T144] PASS    [FUNC] sqrt(-1) => complex
+         Input:    sqrt(-1)
+         Output:   i
+
+[T145] PASS    [FUNC] sqrt(0)
+         Input:    sqrt(0)
+         Output:   0
+
+[T146] PASS    [FUNC] cbrt(27)
+         Input:    cbrt(27)
+         Output:   3
+
+[T147] PASS    [FUNC] cbrt(-8)
+         Input:    cbrt(-8)
+         Output:   -2
+
+[T148] PASS    [FUNC] sin(0)
+         Input:    sin(0)
+         Output:   0
+
+[T149] PASS    [FUNC] cos(0)
+         Input:    cos(0)
+         Output:   1
+
+[T150] PASS    [FUNC] tan(0)
+         Input:    tan(0)
+         Output:   0
+
+[T151] PASS    [FUNC] sin(pi)
+         Input:    sin(pi)
+         Output:   0
+
+[T152] PASS    [FUNC] cos(pi)
+         Input:    cos(pi)
+         Output:   -1
+
+[T153] PASS    [FUNC] asin(1)
+         Input:    asin(1)
+         Output:   1.5707963268
+
+[T154] PASS    [FUNC] acos(0)
+         Input:    acos(0)
+         Output:   1.5707963268
+
+[T155] PASS    [FUNC] asin(2) domain error
+         Input:    asin(2)
+         Output:   Error: Domain error: argument to asin (2) must be between -1 and 1
+
+[T156] PASS    [FUNC] exp(0)
+         Input:    exp(0)
+         Output:   1
+
+[T157] PASS    [FUNC] exp(1)
+         Input:    exp(1)
+         Output:   2.7182818285
+
+[T158] PASS    [FUNC] ln(1)
+         Input:    ln(1)
+         Output:   0
+
+[T159] PASS    [FUNC] ln(e)
+         Input:    ln(e)
+         Output:   1
+
+[T160] PASS    [FUNC] ln(0)
+         Input:    ln(0)
+         Output:   -inf
+
+[T161] PASS    [FUNC] ln(-1)
+         Input:    ln(-1)
+         Output:   3.141592653589793i
+
+[T162] PASS    [FUNC] log10(100)
+         Input:    log10(100)
+         Output:   2
+
+[T163] PASS    [FUNC] log10(0)
+         Input:    log10(0)
+         Output:   -inf
+
+[T164] PASS    [FUNC] abs(-5)
+         Input:    abs(-5)
+         Output:   5
+
+[T165] PASS    [FUNC] abs(5)
+         Input:    abs(5)
+         Output:   5
+
+[T166] PASS    [FUNC] round(2.7)
+         Input:    round(2.7)
+         Output:   3
+
+[T167] PASS    [FUNC] floor(2.9)
+         Input:    floor(2.9)
+         Output:   2
+
+[T168] PASS    [FUNC] ceil(2.1)
+         Input:    ceil(2.1)
+         Output:   3
+
+[T169] PASS    [FUNC] normdist(0)
+         Input:    normdist(0)
+         Output:   0.5000000005
+
+[T170] PASS    [FUNC] No-arg function
+         Input:    sin()
+         Output:   Error: Function 'sin' requires arguments
+
+[T171] PASS    [FUNC] Unknown function
+         Input:    bogus(5)
+         Output:   Error: Unknown function: 'bogus'
+
+--- Section 13: Complex Numbers ---
+
+[T172] PASS    [COMPLEX] i literal
+         Input:    i
+         Output:   i
+
+[T173] PASS    [COMPLEX] i squared
+         Input:    i * i
+         Output:   -1
+
+[T174] PASS    [COMPLEX] i^2
+         Input:    i^2
+         Output:   -1
+
+[T175] PASS    [COMPLEX] Complex addition
+         Input:    (3 + 2i) + (1 + 4i)
+         Output:   4 + 6i
+
+[T176] PASS    [COMPLEX] sqrt(-4)
+         Input:    sqrt(-4)
+         Output:   2i
+
+--- Section 14: Constants ---
+
+[T177] PASS    [CONST] pi value
+         Input:    pi
+         Output:   3.1415926536
+
+[T178] PASS    [CONST] tau value
+         Input:    tau
+         Output:   6.2831853072
+
+[T179] PASS    [CONST] e value
+         Input:    e
+         Output:   2.7182818285
+
+[T180] PASS    [CONST] pi Unicode π
+         Input:    π
+         Output:   3.1415926536
+
+[T181] PASS    [CONST] tau Unicode τ
+         Input:    τ
+         Output:   6.2831853072
+
+[T182] PASS    [CONST] pi/2
+         Input:    pi / 2
+         Output:   1.5707963268
+
+--- Section 15: Percent & Of ---
+
+[T183] PASS    [PERCENT] 50 percent
+         Input:    50%
+         Output:   1/2
+
+[T184] PASS    [PERCENT] 5% of 200
+         Input:    5% of 200
+         Output:   10
+
+[T185] PASS    [PERCENT] 100% of 50
+         Input:    100% of 50
+         Output:   50
+
+[T186] PASS    [PERCENT] 0% of 100
+         Input:    0% of 100
+         Output:   0
+
+[T187] PASS    [PERCENT] 150% of 100
+         Input:    150% of 100
+         Output:   150
+
+[T188] PASS    [PERCENT] Decimal percent 12.5% of 80
+         Input:    12.5% of 80
+         Output:   10
+
+--- Section 16: Implicit Multiplication ---
+
+[T189] PASS    [IMPL_MUL] 2pi
+         Input:    2pi
+         Output:   6.2831853072
+
+[T190] PASS    [IMPL_MUL] 3(4+5)
+         Input:    3(4 + 5)
+         Output:   27
+
+[T191] PASS    [IMPL_MUL] Number unit: 5 m
+         Input:    5 m to cm
+         Output:   500 cm
+
+[T192] PASS    [IMPL_MUL] Adjacent parens (2)(3)
+         Input:    (2)(3)
+         Output:   6
+
+[T193] PASS    [IMPL_MUL] 2sin(0)
+         Input:    2sin(0)
+         Output:   0
+
+[T194] PASS    [IMPL_MUL] Ambiguous: 2x where x unknown
+         Input:    2x
+         Output:   2x
+
+--- Section 17: Parser Edge Cases ---
+
+[T195] PASS    [PARSE] Only operator +
+         Input:    +
+         Output:   Error: Unexpected end of input
+
+[T196] PASS    [PARSE] Only operator *
+         Input:    *
+         Output:   Error: Unexpected token: Star
+
+[T197] PASS    [PARSE] Only operator /
+         Input:    /
+         Output:   Error: Unexpected token: Slash
+
+[T198] PASS    [PARSE] Double operator ++
+         Input:    5 ++ 3
+         Output:   8
+
+[T199] PASS    [PARSE] Trailing operator
+         Input:    5 +
+         Output:   Error: Unexpected end of input
+
+[T200] PASS    [PARSE] Leading operator *
+         Input:    * 5
+         Output:   Error: Unexpected token: Star
+
+[T201] PASS    [PARSE] Multiple dots
+         Input:    1.2.3
+         Output:   Error: Unexpected character: '.' at position 3
+
+[T202] PASS    [PARSE] Only dot
+         Input:    .
+         Output:   Error: Unexpected character: '.' at position 0
+
+[T203] PASS    [PARSE] Exclamation mark
+         Input:    5!
+         Output:   Error: Unexpected character: '!' at position 1
+
+[T204] PASS    [PARSE] At sign
+         Input:    @
+         Output:   Error: Unexpected character: '@' at position 0
+
+[T205] PASS    [PARSE] Hash
+         Input:    #
+         Output:   Error: Unexpected character: '#' at position 0
+
+[T206] PASS    [PARSE] Dollar sign
+         Input:    
+         Output:   Error: Empty input
+
+[T207] PASS    [PARSE] Backslash
+         Input:    \
+         Output:   Error: Unexpected character: '\' at position 0
+
+[T208] PASS    [PARSE] Curly braces
+         Input:    {1+2}
+         Output:   Error: Unexpected character: '{' at position 0
+
+[T209] PASS    [PARSE] Square brackets
+         Input:    [1+2]
+         Output:   Error: Unexpected token: LBracket
+
+[T210] PASS    [PARSE] Very long expression
+         Input:    1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1
+         Output:   50
+
+[T211] PASS    [PARSE] Unicode emoji
+         Input:    😀
+         Output:   Error: Unexpected character: '😀' at position 0
+
+[T212] PASS    [PARSE] Mixed valid/invalid
+         Input:    2 + @ + 3
+         Output:   Error: Unexpected character: '@' at position 4
+
+[T213] PASS    [PARSE] Semicolon at top level
+         Input:    5; 3
+         Output:   Error: Unexpected trailing token: Semicolon
+
+[T214] PASS    [PARSE] Multiple equals
+         Input:    x = y = 5
+         Output:   x = -0
+
+--- Section 18: CLI Flags & Piping ---
+
+[T215] PASS    [CLI] Eval flag -e
+         Input:    2 + 3
+         Output:   5
+
+[T216] PASS    [CLI] Raw flag
+         Input:    1/3
+         Output:   0.333333
+
+[T217] PASS    [CLI] Raw with units
+         Input:    5 m / (3 s)
+         Output:   1.6666666666666667
+
+[T218] PASS    [CLI] Version
+         Input:    
+         Output:   omnicalc 2026.1.0
+
+[T219] PASS    [CLI] Help
+         Input:    
+         Output:   Unified no-nonsense CLI calculator merging qalc, Numbat, fend, and Kalker in Rust
+
+Usage: omnicalc [OPTIONS] [EXPRESSION]...
+
+Arguments:
+  [EXPRESSION]...  Positional expression arguments
+
+Options:
+  -e, --eval <EVAL>  Expression to evaluate directly
+  -r, --raw          Raw output mode (no units or decoration, ideal for shell scripts)
+  -b, --base <BASE>  Number base for output (dec, hex, bin, oct) [default: dec]
+  -h, --help         Print help
+  -V, --version      Print version
+
+[T220] PASS    [PIPE] Stdin single line
+         Pipe:     2 + 3
+         Output:   5
+
+[T221] PASS    [PIPE] Stdin multi-line
+         Pipe:     2 + 3
+4 * 5
+         Output:   5
+20
+
+[T222] PASS    [PIPE] Stdin with comments
+         Pipe:     # comment
+2 + 3
+         Output:   5
+
+[T223] PASS    [PIPE] Stdin empty lines
+         Pipe:     
+2 + 3
+
+         Output:   5
+
+[T224] PASS    [PIPE] Stdin error mid-stream
+         Pipe:     2 + 3
+1 / 0
+4 + 5
+         Output:   5
+Error: Division by zero
+
+[T225] PASS    [PIPE] Stdin with raw flag
+         Pipe:     1/3
+         Output:   0.333333
+
+[T226] PASS    [PIPE] Stdin empty
+         Pipe:     
+         Output:   
+
+--- Section 19: Temperature Conversion Deep ---
+
+[T227] PASS    [TEMP] Boiling point C->F
+         Input:    100 degC to degF
+         Output:   212 degF
+
+[T228] PASS    [TEMP] Freezing point C->F
+         Input:    0 degC to degF
+         Output:   32 degF
+
+[T229] PASS    [TEMP] Body temp F->C
+         Input:    98.6 degF to degC
+         Output:   37 degC
+
+[T230] PASS    [TEMP] Kelvin to Celsius
+         Input:    373.15 K to degC
+         Output:   100 degC
+
+[T231] PASS    [TEMP] Celsius to Kelvin
+         Input:    0 degC to K
+         Output:   273.15 K
+
+[T232] PASS    [TEMP] -40 crossover
+         Input:    -40 degC to degF
+         Output:   -40 degF
+
+[T233] PASS    [TEMP] -40 F to C crossover
+         Input:    -40 degF to degC
+         Output:   -40 degC
+
+--- Section 20: Dimensional Analysis ---
+
+[T234] PASS    [DIM] Multiply m * m = m^2
+         Input:    2 m * 3 m
+         Output:   6
+
+[T235] PASS    [DIM] Divide m / s = velocity
+         Input:    10 m / 2 s
+         Output:   5
+
+[T236] PASS    [DIM] F = m*a units
+         Input:    5 kg * 10 m / (1 s^2)
+         Output:   50
+
+[T237] PASS    [DIM] Energy = F*d
+         Input:    10 N * 5 m to J
+         Output:   50 J
+
+[T238] PASS    [DIM] Power = E/t
+         Input:    100 J / 10 s to W
+         Output:   10 W
+
+[T239] PASS    [DIM] Ohm's law V=IR
+         Input:    (5 A) * (10 ohm) to V
+         Output:   50 V
+
+[T240] PASS    [DIM] Add same dim
+         Input:    5 m + 3 m
+         Output:   8
+
+[T241] PASS    [DIM] Add different dim
+         Input:    5 m + 3 s
+         Output:   Error: Type error: Dimensional mismatch in addition (L vs T)
+
+[T242] PASS    [DIM] Exponent with dim
+         Input:    (2 m)^3
+         Output:   8
+
+[T243] PASS    [DIM] Dim exponent (error)
+         Input:    2^(3 m)
+         Output:   Error: Exponent must be dimensionless
+
+--- Section 21: Stress Tests ---
+
+[T244] PASS    [STRESS] 1000-char number
+         Input:    9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+         Output:   9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
+
+[T245] PASS    [STRESS] Deep paren nesting (100)
+         Input:    ((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((1))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+         Output:   1
+
+[T246] PASS    [STRESS] Long addition chain (200 terms)
+         Input:    1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1
+         Output:   200
+
+[T247] PASS    [STRESS] Huge factorial-like multiply
+         Input:    1*2*3*4*5*6*7*8*9*10*11*12*13*14*15*16*17*18*19*20
+         Output:   2432902008176640000
+
+--- Section 22: Conversion Keywords ---
+
+[T248] PASS    [CONVKEY] Arrow -> syntax
+         Input:    5 km -> m
+         Output:   5000 m
+
+[T249] PASS    [CONVKEY] 'to' keyword
+         Input:    5 km to m
+         Output:   5000 m
+
+[T250] PASS    [CONVKEY] 'in' keyword
+         Input:    5 km in m
+         Output:   5000 m
+
+[T251] PASS    [CONVKEY] 'as' keyword
+         Input:    5 km as m
+         Output:   5000 m
+
+--- Section 23: Special Numbers ---
+
+[T252] PASS    [SPECIAL] Leading zeros
+         Input:    007
+         Output:   7
+
+[T253] PASS    [SPECIAL] Just 0
+         Input:    0
+         Output:   0
+
+[T254] PASS    [SPECIAL] Negative zero
+         Input:    -0
+         Output:   0
+
+[T255] PASS    [SPECIAL] Very precise float
+         Input:    3.141592653589793
+         Output:   3.1415926536
+
+[T256] PASS    [SPECIAL] Max f64 boundary
+         Input:    1.7976931348623157e308
+         Output:   179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368
+
+[T257] PASS    [SPECIAL] Beyond max f64
+         Input:    1e309
+         Output:   inf
+
+[T258] PASS    [SPECIAL] Smallest positive f64
+         Input:    5e-324
+         Output:   0
+
+--- Section 24: Combinatorial ---
+
+[T259] PASS    [COMBO] Uncertainty + conversion
+         Input:    (100±2 degC) to degF
+         Output:   212.0000±3.6000 degF
+
+[T260] PASS    [COMBO] Percent of unit
+         Input:    10% of 1 km to m
+         Output:   100 m
+
+[T261] PASS    [COMBO] Hex to binary
+         Input:    0xFF to bin
+         Output:   0b11111111
+
+[T262] PASS    [COMBO] Expression then to hex
+         Input:    (200 + 55) to hex
+         Output:   0xff
+
+[T263] PASS    [COMBO] Function + unit
+         Input:    sqrt(4 m^2)
+         Output:   2
+
+[T264] PASS    [COMBO] Chained convert attempt
+         Input:    1 km to m to cm
+         Output:   Error: Unexpected trailing token: Arrow
+
+--- Section 25: Unit Registry ---
+
+[T265] PASS    [UREG] Same unit conversion
+         Input:    1 m to m
+         Output:   1 m
+
+[T266] PASS    [UREG] Very small conversion
+         Input:    1 nm to m
+         Output:   0.000000001 m
+
+[T267] PASS    [UREG] Huge conversion ly->m
+         Input:    1 ly to m
+         Output:   9460730472580800 m
+
+[T268] PASS    [UREG] Data GiB vs GB
+         Input:    1 GiB to MB
+         Output:   1073.741824 MB
+
+[T269] PASS    [UREG] Hz -> rpm
+         Input:    1 Hz to rpm
+         Output:   60 rpm
+
+[T270] PASS    [UREG] eV (tiny energy)
+         Input:    1 eV to J
+         Output:   0 J
+
+============================================================================
+SUMMARY
+============================================================================
+Total Tests: 270
+Passed:      270
+Failed:      0
+Crashed:     0
+Pass Rate:   100.0%
+============================================================================
