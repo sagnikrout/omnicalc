@@ -1,8 +1,8 @@
 ============================================================================
 OMNICALC DESTRUCTIVE TEST LOG
-Date: 2026-11-18T00:25:11+05:30
+Date: 2026-11-18T01:55:01+05:30
 Binary: /home/sagnik/code/omnicalc/target/release/omnicalc
-Binary size: 2051264 bytes
+Binary size: 2053776 bytes
 ============================================================================
 
 --- Section 1: Empty & Degenerate Input ---
@@ -1128,7 +1128,7 @@ Error: Division by zero
 
 [T264] PASS    [COMBO] Chained convert attempt
          Input:    1 km to m to cm
-         Output:   Error: Unexpected trailing token: Arrow
+         Output:   100000 cm
 
 --- Section 25: Unit Registry ---
 
