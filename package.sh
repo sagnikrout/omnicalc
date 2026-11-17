@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 PKG_NAME="omnicalc"
-VERSION="0.1.0"
+VERSION=$(grep '^version = ' "$SCRIPT_DIR/Cargo.toml" | head -n1 | cut -d'"' -f2)
 TARGET_TRIPLE="linux-x86_64"
 DIST_DIR="$SCRIPT_DIR/dist"
 
@@ -78,11 +78,11 @@ cat << EOF > "$DEB_STAGING/DEBIAN/control"
 Package: $PKG_NAME
 Version: $VERSION
 Architecture: amd64
-Maintainer: Sagnik <sagnik@localhost>
+Maintainer: Sagnik Rout <https://github.com/sagnikrout>
 Installed-Size: $INSTALLED_SIZE
 Section: math
 Priority: optional
-Homepage: https://github.com/omnicalc/omnicalc
+Homepage: https://github.com/sagnikrout/cal
 Description: High-performance scientific CLI calculator and CAS engine
  A lightweight, zero-allocation scientific calculator featuring physical
  unit conversions, Gaussian uncertainty propagation, complex numbers,

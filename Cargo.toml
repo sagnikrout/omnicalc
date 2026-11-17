@@ -1,11 +1,11 @@
 [package]
 name = "omnicalc"
-version = "0.1.0"
+version = "2026.11.18"
 edition = "2024"
-authors = ["Sagnik <sagnik@localhost>"]
+authors = ["Sagnik Rout <https://github.com/sagnikrout>", "Antigravity & Gemini 3.8 Flash High <Google DeepMind>"]
 description = "High-performance scientific CLI calculator, physical unit converter, and Computer Algebra System"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/omnicalc/omnicalc"
+repository = "https://github.com/sagnikrout/cal"
 readme = "README.md"
 keywords = ["calculator", "units", "cas", "physics", "cli"]
 categories = ["command-line-utilities", "science"]

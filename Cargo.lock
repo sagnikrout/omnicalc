@@ -253,7 +253,7 @@ dependencies = [
 
 [[package]]
 name = "omnicalc"
-version = "0.1.0"
+version = "2026.11.18"
 dependencies = [
  "clap",
  "num-bigint",

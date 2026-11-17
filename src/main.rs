@@ -8,9 +8,9 @@ use std::io::{self, BufRead, IsTerminal};
 
 #[derive(Parser, Debug)]
 #[command(name = "omnicalc")]
-#[command(author = "DeepMind & Antigravity Synthesis Engine")]
-#[command(version = "2026.1.0")]
-#[command(about = "Unified no-nonsense CLI calculator merging qalc, Numbat, fend, and Kalker in Rust")]
+#[command(author = "Sagnik Rout & Gemini 3.8 Flash High (Google DeepMind)")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
+#[command(about = "Unified high-performance scientific CLI calculator & CAS (https://github.com/sagnikrout/cal)")]
 struct Args {
     /// Expression to evaluate directly
     #[arg(short = 'e', long = "eval", allow_hyphen_values = true)]
@@ -27,6 +27,14 @@ struct Args {
     /// Number base for output (dec, hex, bin, oct)
     #[arg(short = 'b', long = "base", default_value = "dec")]
     base: String,
+
+    /// Display credits, project vision, and acknowledgments
+    #[arg(long = "credits")]
+    credits: bool,
+
+    /// Display project vision and architectural origins
+    #[arg(long = "about")]
+    about: bool,
 }
 
 fn evaluate_str(evaluator: &mut Evaluator, input: &str, raw: bool, base_code: u32) -> Result<String, String> {
@@ -61,6 +69,12 @@ fn parse_base_str(base_str: &str) -> u32 {
 
 fn main() {
     let args = Args::parse();
+
+    if args.credits || args.about {
+        print_credits();
+        return;
+    }
+
     let base_code = parse_base_str(&args.base);
     let mut evaluator = Evaluator::new();
 
@@ -118,7 +132,8 @@ fn main() {
     }
 
     // Interactive REPL mode
-    println!("omnicalc 2026.1.0 — Unified CLI Scientific & Physical Engine");
+    println!("omnicalc (cal) v{} — Unified CLI Scientific & Physical Engine", env!("CARGO_PKG_VERSION"));
+    println!("Origin: Sagnik Rout (https://github.com/sagnikrout/cal) | Synthesis: Gemini 3.8 Flash High");
     println!("Synthesis: qalc (CAS/Uncertainty) + Numbat (Dimensional Safety) + fend (Ergonomics) + Kalker (Math Syntax)");
     println!("Type 'quit' or 'exit' or press Ctrl-D to exit.\n");
 
@@ -176,4 +191,31 @@ fn dirs_or_home_history() -> std::path::PathBuf {
     } else {
         std::path::PathBuf::from(".omnicalc_history")
     }
+}
+
+fn print_credits() {
+    println!("omnicalc (cal) — Version {}", env!("CARGO_PKG_VERSION"));
+    println!("Repository: https://github.com/sagnikrout/cal");
+    println!("High-Performance Scientific CLI Calculator & Computer Algebra System\n");
+    println!("=== Origin & Vision ===");
+    println!("  Conceived and founded by Sagnik Rout (https://github.com/sagnikrout)");
+    println!("  Started years ago with a bold vision and relentless optimism: to build a unified,");
+    println!("  lightning-fast, zero-compromise scientific calculator for the UNIX terminal.\n");
+    println!("=== Engineering & Synthesis ===");
+    println!("  Co-engineered with Gemini 3.8 Flash High & Antigravity (Google DeepMind)");
+    println!("  Operating in Charlie Rutledge mode: rigorous verification, boundary defense,");
+    println!("  and zero-handwaving engineering standards.\n");
+    println!("=== Standing on the Shoulders of Giants ===");
+    println!("  We express deep gratitude to the creators and maintainers of the open-source");
+    println!("  scientific tools whose years of work established the foundation for modern CLI math:");
+    println!("  - Qalculate! / libqalculate (Niklas Knutsson & contributors) — CAS, dimensional units, uncertainty.");
+    println!("  - Numbat (David Peter / @sharkdp & contributors) — Rigorous static physical dimension typing.");
+    println!("  - fend (Evan Jones / @printfn & contributors) — Exact rational AST, elegant CLI ergonomics.");
+    println!("  - kalker (PaddiM8 & contributors) — Pure mathematical syntax, complex roots, matrices.");
+    println!("  - Insect (David Peter) — The web/CLI physical unit predecessor.");
+    println!("  - calc / apcalc (David I. Bell, Landon Curt Noll) — C-based arbitrary precision pioneer since the 1990s.\n");
+    println!("=== Mathematical Foundations ===");
+    println!("  Dedicated to the mathematicians whose theorems power this engine:");
+    println!("  Leonhard Euler, Isaac Newton, Joseph Raphson, Carl Friedrich Gauss,");
+    println!("  Alexander Kronrod, Thomas Simpson, Vaughan Pratt, and Bernhard Riemann.");
 }
