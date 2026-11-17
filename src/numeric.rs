@@ -60,21 +60,28 @@ impl NumericValue {
         match (self, power) {
             (Self::Exact(b), Self::Exact(p)) if p.is_integer() => {
                 if let Some(exp) = p.to_integer().to_i32() {
-                    if exp >= 0 {
-                        let mut res = BigRational::one();
-                        for _ in 0..exp {
-                            res *= b;
+                    if b.is_zero() {
+                        if exp < 0 {
+                            return Self::Float(f64::INFINITY);
+                        } else if exp == 0 {
+                            return Self::from_i64(1);
+                        } else {
+                            return Self::from_i64(0);
                         }
-                        return Self::Exact(res);
-                    } else {
-                        let mut res = BigRational::one();
-                        for _ in 0..(-exp) {
-                            res *= b;
+                    }
+                    if exp.abs() <= 100_000 {
+                        let exp_u = exp.unsigned_abs();
+                        let numer = b.numer().pow(exp_u);
+                        let denom = b.denom().pow(exp_u);
+                        let res = BigRational::new(numer, denom);
+                        if exp >= 0 {
+                            return Self::Exact(res);
+                        } else {
+                            return Self::Exact(res.recip());
                         }
-                        return Self::Exact(res.recip());
                     }
                 }
-                Self::Float(b.to_f64().unwrap().powf(p.to_f64().unwrap()))
+                Self::Float(b.to_f64().unwrap_or(0.0).powf(p.to_f64().unwrap_or(0.0)))
             }
             (Self::Uncertainty { nominal, error }, p) => {
                 let p_f = p.to_f64();
@@ -92,7 +99,26 @@ impl NumericValue {
                 };
                 Self::Complex(a.powc(p_c))
             }
-            (a, b) => Self::Float(a.to_f64().powf(b.to_f64())),
+            (a, Self::Complex(p_c)) => {
+                let a_c = Complex64::new(a.to_f64(), 0.0);
+                Self::Complex(a_c.powc(*p_c))
+            }
+            (a, b) => {
+                let af = a.to_f64();
+                let bf = b.to_f64();
+                if af < 0.0 && bf.fract() != 0.0 {
+                    let a_c = Complex64::new(af, 0.0);
+                    let b_c = Complex64::new(bf, 0.0);
+                    let res = a_c.powc(b_c);
+                    if res.im.abs() < 1e-12 {
+                        Self::Float(res.re)
+                    } else {
+                        Self::Complex(res)
+                    }
+                } else {
+                    Self::Float(af.powf(bf))
+                }
+            }
         }
     }
 
@@ -126,15 +152,24 @@ impl NumericValue {
     }
 
     pub fn sin(&self) -> Self {
-        Self::Float(self.to_f64().sin())
+        match self {
+            Self::Complex(c) => Self::Complex(c.sin()),
+            _ => Self::Float(self.to_f64().sin()),
+        }
     }
 
     pub fn cos(&self) -> Self {
-        Self::Float(self.to_f64().cos())
+        match self {
+            Self::Complex(c) => Self::Complex(c.cos()),
+            _ => Self::Float(self.to_f64().cos()),
+        }
     }
 
     pub fn tan(&self) -> Self {
-        Self::Float(self.to_f64().tan())
+        match self {
+            Self::Complex(c) => Self::Complex(c.tan()),
+            _ => Self::Float(self.to_f64().tan()),
+        }
     }
 
     pub fn asin(&self) -> Self {
@@ -150,20 +185,38 @@ impl NumericValue {
     }
 
     pub fn ln(&self) -> Self {
-        let f = self.to_f64();
-        if f <= 0.0 {
-            Self::Complex(Complex64::new(f, 0.0).ln())
-        } else {
-            Self::Float(f.ln())
+        match self {
+            Self::Complex(c) => Self::Complex(c.ln()),
+            _ => {
+                let f = self.to_f64();
+                if f <= 0.0 {
+                    Self::Complex(Complex64::new(f, 0.0).ln())
+                } else {
+                    Self::Float(f.ln())
+                }
+            }
         }
     }
 
     pub fn log10(&self) -> Self {
-        Self::Float(self.to_f64().log10())
+        match self {
+            Self::Complex(c) => Self::Complex(c.ln() / std::f64::consts::LN_10),
+            _ => {
+                let f = self.to_f64();
+                if f < 0.0 {
+                    Self::Complex(Complex64::new(f, 0.0).ln() / std::f64::consts::LN_10)
+                } else {
+                    Self::Float(f.log10())
+                }
+            }
+        }
     }
 
     pub fn exp(&self) -> Self {
-        Self::Float(self.to_f64().exp())
+        match self {
+            Self::Complex(c) => Self::Complex(c.exp()),
+            _ => Self::Float(self.to_f64().exp()),
+        }
     }
 
     pub fn abs(&self) -> Self {
@@ -233,24 +286,44 @@ impl NumericValue {
             Self::Complex(c) => {
                 if raw {
                     format!("({},{})", c.re, c.im)
-                } else if c.im.abs() < 1e-12 {
-                    if c.re.fract() == 0.0 && c.re.abs() < 1e15 {
-                        format!("{:.0}", c.re)
+                } else if c.im.abs() < 1e-10 {
+                    if c.re.fract().abs() < 1e-10 && c.re.abs() < 1e15 {
+                        format!("{:.0}", c.re.round())
                     } else {
                         format!("{:.10}", c.re).trim_end_matches('0').trim_end_matches('.').to_string()
                     }
-                } else if c.re.abs() < 1e-12 {
-                    if (c.im - 1.0).abs() < 1e-12 {
+                } else if c.re.abs() < 1e-10 {
+                    if (c.im - 1.0).abs() < 1e-10 {
                         "i".to_string()
-                    } else if (c.im + 1.0).abs() < 1e-12 {
+                    } else if (c.im + 1.0).abs() < 1e-10 {
                         "-i".to_string()
                     } else {
-                        format!("{}i", c.im)
+                        let im_str = if c.im.fract().abs() < 1e-10 {
+                            format!("{:.0}", c.im.round())
+                        } else {
+                            format!("{:.10}", c.im).trim_end_matches('0').trim_end_matches('.').to_string()
+                        };
+                        format!("{}i", im_str)
                     }
-                } else if c.im >= 0.0 {
-                    format!("{} + {}i", c.re, c.im)
                 } else {
-                    format!("{} - {}i", c.re, -c.im)
+                    let re_str = if c.re.fract().abs() < 1e-10 {
+                        format!("{:.0}", c.re.round())
+                    } else {
+                        format!("{:.10}", c.re).trim_end_matches('0').trim_end_matches('.').to_string()
+                    };
+                    let im_abs = c.im.abs();
+                    let im_str = if (im_abs - 1.0).abs() < 1e-10 {
+                        "i".to_string()
+                    } else if im_abs.fract().abs() < 1e-10 {
+                        format!("{:.0}i", im_abs.round())
+                    } else {
+                        format!("{}i", format!("{:.10}", im_abs).trim_end_matches('0').trim_end_matches('.'))
+                    };
+                    if c.im >= 0.0 {
+                        format!("{} + {}", re_str, im_str)
+                    } else {
+                        format!("{} - {}", re_str, im_str)
+                    }
                 }
             }
         }
@@ -326,10 +399,10 @@ impl Mul for NumericValue {
             (Self::Exact(a), Self::Exact(b)) => Self::Exact(a * b),
             (Self::Uncertainty { nominal: a, error: da }, Self::Uncertainty { nominal: b, error: db }) => {
                 let prod = a * b;
-                let rel_err = ((da / a).powi(2) + (db / b).powi(2)).sqrt();
+                let err = ((b * da).powi(2) + (a * db).powi(2)).sqrt();
                 Self::Uncertainty {
                     nominal: prod,
-                    error: (prod * rel_err).abs(),
+                    error: err,
                 }
             }
             (Self::Uncertainty { nominal: a, error: da }, b) => {
@@ -361,10 +434,14 @@ impl Div for NumericValue {
             (Self::Exact(a), Self::Exact(b)) if !b.is_zero() => Self::Exact(a / b),
             (Self::Uncertainty { nominal: a, error: da }, Self::Uncertainty { nominal: b, error: db }) => {
                 let quot = a / b;
-                let rel_err = ((da / a).powi(2) + (db / b).powi(2)).sqrt();
+                let err = if b != 0.0 {
+                    ((da / b).powi(2) + ((a * db) / (b * b)).powi(2)).sqrt()
+                } else {
+                    f64::NAN
+                };
                 Self::Uncertainty {
                     nominal: quot,
-                    error: (quot * rel_err).abs(),
+                    error: err,
                 }
             }
             (Self::Uncertainty { nominal: a, error: da }, b) => {
@@ -377,10 +454,10 @@ impl Div for NumericValue {
             (a, Self::Uncertainty { nominal: b, error: db }) => {
                 let af = a.to_f64();
                 let quot = af / b;
-                let rel_err = (db / b).abs();
+                let err = ((af * db) / (b * b)).abs();
                 Self::Uncertainty {
                     nominal: quot,
-                    error: (quot * rel_err).abs(),
+                    error: err,
                 }
             }
             (Self::Complex(a), Self::Complex(b)) => Self::Complex(a / b),

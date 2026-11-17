@@ -186,12 +186,76 @@ impl UnitRegistry {
         self.add_unit("AUD", "australian_dollar", Dimension::CURRENCY, 0.650, 0.0);
         self.add_unit("CHF", "swiss_franc", Dimension::CURRENCY, 1.120, 0.0);
         self.add_unit("CNY", "chinese_yuan", Dimension::CURRENCY, 1.0 / 7.25, 0.0);
+
+        // Common compound units
+        self.add_unit("m/s", "meters_per_second", Dimension::VELOCITY, 1.0, 0.0);
+        self.add_unit("km/h", "kilometers_per_hour", Dimension::VELOCITY, 1000.0 / 3600.0, 0.0);
+        self.add_unit("m^2", "square_meter", Dimension::LENGTH.pow(2), 1.0, 0.0);
+        self.add_unit("cm^2", "square_centimeter", Dimension::LENGTH.pow(2), 0.0001, 0.0);
+        self.add_unit("mm^2", "square_millimeter", Dimension::LENGTH.pow(2), 1e-6, 0.0);
+        self.add_unit("ft^2", "square_foot", Dimension::LENGTH.pow(2), 0.3048 * 0.3048, 0.0);
+        self.add_unit("in^2", "square_inch", Dimension::LENGTH.pow(2), 0.0254 * 0.0254, 0.0);
+        self.add_unit("L", "liter", Dimension::LENGTH.pow(3), 0.001, 0.0);
+        self.add_unit("mL", "milliliter", Dimension::LENGTH.pow(3), 1e-6, 0.0);
     }
 
     pub fn lookup(&self, name: &str) -> Option<UnitDefinition> {
         let clean = name.trim();
         if let Some(unit) = self.units.get(clean) {
             return Some(unit.clone());
+        }
+
+        // Check for compound slash units: e.g. km/h, m/s, N/m^2
+        if let Some(slash_idx) = clean.find('/') {
+            let num_part = &clean[..slash_idx];
+            let den_part = &clean[slash_idx + 1..];
+            if let (Some(num_def), Some(den_def)) = (self.lookup(num_part), self.lookup(den_part)) {
+                if num_def.offset == 0.0 && den_def.offset == 0.0 {
+                    return Some(UnitDefinition {
+                        symbol: clean.to_string(),
+                        name: clean.to_string(),
+                        dimension: num_def.dimension - den_def.dimension,
+                        scale: num_def.scale / den_def.scale,
+                        offset: 0.0,
+                    });
+                }
+            }
+        }
+
+        // Check for compound power units: e.g. m^2, s^3
+        if let Some(caret_idx) = clean.find('^') {
+            let base_part = &clean[..caret_idx];
+            let exp_part = &clean[caret_idx + 1..];
+            if let Ok(exp) = exp_part.parse::<i8>() {
+                if let Some(base_def) = self.lookup(base_part) {
+                    if base_def.offset == 0.0 {
+                        return Some(UnitDefinition {
+                            symbol: clean.to_string(),
+                            name: clean.to_string(),
+                            dimension: base_def.dimension.pow(exp),
+                            scale: base_def.scale.powi(exp as i32),
+                            offset: 0.0,
+                        });
+                    }
+                }
+            }
+        }
+
+        // Check for compound product units: e.g. kg*m, N*s
+        if let Some(star_idx) = clean.find('*') {
+            let p1 = &clean[..star_idx];
+            let p2 = &clean[star_idx + 1..];
+            if let (Some(d1), Some(d2)) = (self.lookup(p1), self.lookup(p2)) {
+                if d1.offset == 0.0 && d2.offset == 0.0 {
+                    return Some(UnitDefinition {
+                        symbol: clean.to_string(),
+                        name: clean.to_string(),
+                        dimension: d1.dimension + d2.dimension,
+                        scale: d1.scale * d2.scale,
+                        offset: 0.0,
+                    });
+                }
+            }
         }
 
         // Try standard metric prefixes on base units

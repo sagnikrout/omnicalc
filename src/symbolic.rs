@@ -89,6 +89,19 @@ pub fn diff(expr: &Expr, var: &str) -> Expr {
                 simplify(&term)
             }
         }
+        Expr::Call(name, args) if name == "diff" => {
+            let inner_expr = &args[0];
+            let v = if args.len() > 1 {
+                match &args[1] {
+                    Expr::Unit(s) | Expr::Variable(s) => s.as_str(),
+                    _ => var,
+                }
+            } else {
+                var
+            };
+            let d1 = diff(inner_expr, v);
+            simplify(&diff(&d1, var))
+        }
         Expr::Call(name, args) if args.len() == 1 => {
             let u = &args[0];
             let du = diff(u, var);
@@ -107,6 +120,21 @@ pub fn diff(expr: &Expr, var: &str) -> Expr {
                         Box::new(Expr::Call("sin".to_string(), vec![u.clone()])),
                     );
                     let d = Expr::Binary(Box::new(neg_sin), BinaryOp::Mul, Box::new(du));
+                    simplify(&d)
+                }
+                "tan" => {
+                    let cos_u = Expr::Call("cos".to_string(), vec![u.clone()]);
+                    let cos_sq = Expr::Binary(Box::new(cos_u), BinaryOp::Pow, Box::new(Expr::Number(NumericValue::from_i64(2))));
+                    let d = Expr::Binary(Box::new(du), BinaryOp::Div, Box::new(cos_sq));
+                    simplify(&d)
+                }
+                "sqrt" => {
+                    let denom = Expr::Binary(
+                        Box::new(Expr::Number(NumericValue::from_i64(2))),
+                        BinaryOp::Mul,
+                        Box::new(Expr::Call("sqrt".to_string(), vec![u.clone()])),
+                    );
+                    let d = Expr::Binary(Box::new(du), BinaryOp::Div, Box::new(denom));
                     simplify(&d)
                 }
                 "exp" => {
@@ -286,6 +314,24 @@ fn eval_with_var(expr: &Expr, var: &str, val: f64) -> f64 {
         Expr::Binary(lhs, BinaryOp::Mul, rhs) => eval_with_var(lhs, var, val) * eval_with_var(rhs, var, val),
         Expr::Binary(lhs, BinaryOp::Div, rhs) => eval_with_var(lhs, var, val) / eval_with_var(rhs, var, val),
         Expr::Binary(lhs, BinaryOp::Pow, rhs) => eval_with_var(lhs, var, val).powf(eval_with_var(rhs, var, val)),
+        Expr::Call(name, args) => {
+            let eval_args: Vec<f64> = args.iter().map(|a| eval_with_var(a, var, val)).collect();
+            match name.as_str() {
+                "sin" if eval_args.len() == 1 => eval_args[0].sin(),
+                "cos" if eval_args.len() == 1 => eval_args[0].cos(),
+                "tan" if eval_args.len() == 1 => eval_args[0].tan(),
+                "asin" if eval_args.len() == 1 => eval_args[0].asin(),
+                "acos" if eval_args.len() == 1 => eval_args[0].acos(),
+                "atan" if eval_args.len() == 1 => eval_args[0].atan(),
+                "exp" if eval_args.len() == 1 => eval_args[0].exp(),
+                "ln" if eval_args.len() == 1 => eval_args[0].ln(),
+                "log" | "log10" if eval_args.len() == 1 => eval_args[0].log10(),
+                "sqrt" if eval_args.len() == 1 => eval_args[0].sqrt(),
+                "cbrt" if eval_args.len() == 1 => eval_args[0].cbrt(),
+                "abs" if eval_args.len() == 1 => eval_args[0].abs(),
+                _ => 0.0,
+            }
+        }
         _ => 0.0,
     }
 }
@@ -297,7 +343,7 @@ pub fn find_numerical_root(expr: &Expr, var: &str, init_guess: f64) -> Result<f6
     for _ in 0..100 {
         let fx = eval_with_var(expr, var, x);
         if fx.abs() < 1e-12 {
-            return Ok(x);
+            return Ok(if x.abs() < 1e-10 { 0.0 } else { x });
         }
         let dfx = eval_with_var(&d_expr, var, x);
         if dfx.abs() < 1e-15 {
@@ -308,14 +354,14 @@ pub fn find_numerical_root(expr: &Expr, var: &str, init_guess: f64) -> Result<f6
         if (next_x - x).abs() < 1e-12 {
             let final_check = eval_with_var(expr, var, next_x);
             if final_check.abs() < 1e-5 {
-                return Ok(next_x);
+                return Ok(if next_x.abs() < 1e-10 { 0.0 } else { next_x });
             }
         }
         x = next_x;
     }
     let final_fx = eval_with_var(expr, var, x);
     if final_fx.abs() < 1e-5 {
-        Ok(x)
+        Ok(if x.abs() < 1e-10 { 0.0 } else { x })
     } else {
         Err("No real solution found".to_string())
     }
@@ -323,6 +369,38 @@ pub fn find_numerical_root(expr: &Expr, var: &str, init_guess: f64) -> Result<f6
 
 /// Factors simple polynomials or expressions (e.g. x^2 - 9 -> (x - 3)(x + 3))
 pub fn factor_polynomial(expr: &Expr, var: &str) -> String {
+    // If it's a constant integer, compute prime factorization
+    if let Expr::Number(n) = expr {
+        let val_f = n.to_f64();
+        if val_f > 1.0 && val_f.fract() == 0.0 && val_f < 1e12 {
+            let mut num = val_f as u64;
+            let mut factors: Vec<(u64, u32)> = Vec::new();
+            let mut d = 2;
+            while d * d <= num {
+                if num % d == 0 {
+                    let mut count = 0;
+                    while num % d == 0 {
+                        count += 1;
+                        num /= d;
+                    }
+                    factors.push((d, count));
+                }
+                d += if d == 2 { 1 } else { 2 };
+            }
+            if num > 1 {
+                factors.push((num, 1));
+            }
+            if factors.len() == 1 && factors[0].1 == 1 {
+                return format!("{}", factors[0].0);
+            }
+            let factor_strs: Vec<String> = factors
+                .iter()
+                .map(|(p, c)| if *c == 1 { format!("{}", p) } else { format!("{}^{}", p, c) })
+                .collect();
+            return factor_strs.join(" * ");
+        }
+    }
+
     // If it's quadratic: ax^2 + bx + c
     let d1 = simplify(&diff(expr, var));
     let d2 = simplify(&diff(&d1, var));

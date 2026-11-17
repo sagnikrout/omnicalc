@@ -3,16 +3,20 @@ use crate::lexer::Token;
 use crate::numeric::NumericValue;
 use num_bigint::BigInt;
 use num_rational::BigRational;
+use num_traits::Num;
 use std::str::FromStr;
 
 pub struct Parser {
     tokens: Vec<Token>,
     pos: usize,
+    depth: usize,
 }
+
+const MAX_DEPTH: usize = 512;
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, pos: 0 }
+        Self { tokens, pos: 0, depth: 0 }
     }
 
     fn peek(&self) -> Option<&Token> {
@@ -57,6 +61,16 @@ impl Parser {
     }
 
     fn parse_conversion_or_equation(&mut self) -> Result<Expr, String> {
+        if self.depth > MAX_DEPTH {
+            return Err("Recursion depth limit exceeded".to_string());
+        }
+        self.depth += 1;
+        let res = self.parse_conversion_or_equation_inner();
+        self.depth -= 1;
+        res
+    }
+
+    fn parse_conversion_or_equation_inner(&mut self) -> Result<Expr, String> {
         let expr = self.parse_binary(0)?;
 
         // Check for '=' (equation)
@@ -72,31 +86,60 @@ impl Parser {
         // Check for '->' or 'to' or 'as' or 'in' (when used as conversion)
         let is_arrow = self.peek() == Some(&Token::Arrow);
         let is_in_conversion = if self.peek() == Some(&Token::In) {
-            matches!(self.tokens.get(self.pos + 1), Some(Token::Ident(_)))
+            matches!(self.tokens.get(self.pos + 1), Some(Token::Ident(_)) | Some(Token::In))
         } else {
             false
         };
 
         if is_arrow || is_in_conversion {
             self.advance();
-            if let Some(Token::Ident(target)) = self.peek() {
-                let target_str = target.clone();
-                self.advance();
-                match target_str.to_lowercase().as_str() {
-                    "hex" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 16 }),
-                    "bin" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 2 }),
-                    "oct" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 8 }),
-                    "dec" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 10 }),
-                    "factors" | "factor" => return Ok(Expr::Call("factor".to_string(), vec![expr])),
-                    _ => {
-                        return Ok(Expr::Convert {
-                            expr: Box::new(expr),
-                            target: target_str,
-                        });
+            let mut target_str = String::new();
+            while let Some(tok) = self.peek() {
+                match tok {
+                    Token::Ident(s) => {
+                        target_str.push_str(s);
+                        self.advance();
                     }
+                    Token::In => {
+                        target_str.push_str("in");
+                        self.advance();
+                    }
+                    Token::Slash => {
+                        target_str.push('/');
+                        self.advance();
+                    }
+                    Token::Star => {
+                        target_str.push('*');
+                        self.advance();
+                    }
+                    Token::Caret => {
+                        target_str.push('^');
+                        self.advance();
+                    }
+                    Token::Number(s) => {
+                        target_str.push_str(s);
+                        self.advance();
+                    }
+                    _ => break,
                 }
-            } else {
+            }
+
+            if target_str.is_empty() {
                 return Err("Expected target unit or base after 'to'/'->'".to_string());
+            }
+
+            match target_str.to_lowercase().as_str() {
+                "hex" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 16 }),
+                "bin" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 2 }),
+                "oct" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 8 }),
+                "dec" => return Ok(Expr::ToBase { expr: Box::new(expr), base: 10 }),
+                "factors" | "factor" => return Ok(Expr::Call("factor".to_string(), vec![expr])),
+                _ => {
+                    return Ok(Expr::Convert {
+                        expr: Box::new(expr),
+                        target: target_str,
+                    });
+                }
             }
         }
 
@@ -104,9 +147,30 @@ impl Parser {
     }
 
     fn parse_binary(&mut self, min_prec: u8) -> Result<Expr, String> {
+        if self.depth > MAX_DEPTH {
+            return Err("Recursion depth limit exceeded".to_string());
+        }
+        self.depth += 1;
+        let res = self.parse_binary_inner(min_prec);
+        self.depth -= 1;
+        res
+    }
+
+    fn parse_binary_inner(&mut self, min_prec: u8) -> Result<Expr, String> {
         let mut lhs = self.parse_primary()?;
 
         loop {
+            // Check for immediate postfix percentage
+            if self.peek() == Some(&Token::PercentPostfix) {
+                self.advance();
+                lhs = Expr::Binary(
+                    Box::new(lhs),
+                    BinaryOp::Div,
+                    Box::new(Expr::Number(NumericValue::from_i64(100))),
+                );
+                continue;
+            }
+
             // Check for derivative prime: e.g. f' or (x^2)'
             if self.peek() == Some(&Token::Prime) {
                 self.advance();
@@ -116,8 +180,12 @@ impl Parser {
 
             // Check for ± / +/- (uncertainty)
             if self.peek() == Some(&Token::PlusMinus) {
+                let prec = 4; // Lower precedence than addition/multiplication
+                if prec < min_prec {
+                    break;
+                }
                 self.advance();
-                let err_expr = self.parse_binary(10)?;
+                let err_expr = self.parse_binary(prec)?;
                 lhs = Expr::Uncertainty {
                     nominal: Box::new(lhs),
                     error: Box::new(err_expr),
@@ -184,11 +252,24 @@ impl Parser {
     }
 
     fn parse_primary(&mut self) -> Result<Expr, String> {
+        if self.depth > MAX_DEPTH {
+            return Err("Recursion depth limit exceeded".to_string());
+        }
+        self.depth += 1;
+        let res = self.parse_primary_inner();
+        self.depth -= 1;
+        res
+    }
+
+    fn parse_primary_inner(&mut self) -> Result<Expr, String> {
         let tok = self.advance().ok_or_else(|| "Unexpected end of input".to_string())?;
 
         match tok {
             Token::In => {
                 Ok(Expr::Unit("in".to_string()))
+            }
+            Token::PercentPostfix => {
+                Err("Unexpected percentage symbol without preceding value".to_string())
             }
             Token::Number(s) => {
                 let mut expr = if s.contains('.') || s.contains('e') || s.contains('E') {
@@ -199,16 +280,8 @@ impl Parser {
                     Expr::Number(NumericValue::Exact(BigRational::from_integer(b)))
                 };
 
-                // Check for immediate percent: e.g. 50%, 5% of 100
-                // But NOT if followed by a number or '(' where it's binary modulus (e.g. 10 % 3, 10 % 0)
-                let is_postfix_percent = match self.peek() {
-                    Some(Token::Percent) => {
-                        !matches!(self.tokens.get(self.pos + 1), Some(Token::Number(_)) | Some(Token::LParen))
-                    }
-                    _ => false,
-                };
-
-                if is_postfix_percent {
+                // Check for immediate percent postfix
+                if self.peek() == Some(&Token::PercentPostfix) {
                     self.advance();
                     expr = Expr::Binary(
                         Box::new(expr),
@@ -220,18 +293,34 @@ impl Parser {
                 Ok(expr)
             }
             Token::Hex(s) => {
-                let val = i64::from_str_radix(&s, 16).map_err(|e| format!("Invalid hex: {}", e))?;
-                Ok(Expr::Number(NumericValue::from_i64(val)))
+                let b = BigInt::from_str_radix(&s, 16).map_err(|e| format!("Invalid hex: {}", e))?;
+                Ok(Expr::Number(NumericValue::Exact(BigRational::from_integer(b))))
             }
             Token::Bin(s) => {
-                let val = i64::from_str_radix(&s, 2).map_err(|e| format!("Invalid binary: {}", e))?;
-                Ok(Expr::Number(NumericValue::from_i64(val)))
+                let b = BigInt::from_str_radix(&s, 2).map_err(|e| format!("Invalid binary: {}", e))?;
+                Ok(Expr::Number(NumericValue::Exact(BigRational::from_integer(b))))
             }
             Token::Oct(s) => {
-                let val = i64::from_str_radix(&s, 8).map_err(|e| format!("Invalid octal: {}", e))?;
-                Ok(Expr::Number(NumericValue::from_i64(val)))
+                let b = BigInt::from_str_radix(&s, 8).map_err(|e| format!("Invalid octal: {}", e))?;
+                Ok(Expr::Number(NumericValue::Exact(BigRational::from_integer(b))))
             }
             Token::FeetInches(ft, inch) => {
+                // Standalone feet (ft > 0, inch == 0)
+                if ft > 0.0 && inch == 0.0 {
+                    return Ok(Expr::Binary(
+                        Box::new(Expr::Number(NumericValue::from_f64(ft))),
+                        BinaryOp::Mul,
+                        Box::new(Expr::Unit("ft".to_string())),
+                    ));
+                }
+                // Standalone inches (ft == 0, inch > 0)
+                if ft == 0.0 && inch > 0.0 {
+                    return Ok(Expr::Binary(
+                        Box::new(Expr::Number(NumericValue::from_f64(inch))),
+                        BinaryOp::Mul,
+                        Box::new(Expr::Unit("in".to_string())),
+                    ));
+                }
                 // 5'10" = 5 ft + 10 in
                 let ft_expr = Expr::Binary(
                     Box::new(Expr::Number(NumericValue::from_f64(ft))),
@@ -300,15 +389,8 @@ impl Parser {
                         Expr::Number(NumericValue::Exact(BigRational::from_integer(b)))
                     };
 
-                    // Check for immediate percent: e.g. -50%
-                    let is_postfix_percent = match self.peek() {
-                        Some(Token::Percent) => {
-                            !matches!(self.tokens.get(self.pos + 1), Some(Token::Number(_)) | Some(Token::LParen))
-                        }
-                        _ => false,
-                    };
-
-                    if is_postfix_percent {
+                    // Check for immediate percent postfix
+                    if self.peek() == Some(&Token::PercentPostfix) {
                         self.advance();
                         expr = Expr::Binary(
                             Box::new(expr),

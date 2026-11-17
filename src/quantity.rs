@@ -86,6 +86,67 @@ impl Quantity {
         }
     }
 
+    pub fn format_with_registry(&self, registry: &UnitRegistry) -> String {
+        if let Some(ref u) = self.unit_str {
+            if let Some(def) = registry.lookup(u) {
+                if def.offset != 0.0 || (def.scale != 1.0 && def.scale > 0.0) {
+                    let base_f = self.value.to_f64();
+                    let display_f = (base_f / def.scale) - def.offset;
+                    let display_val = match &self.value {
+                        NumericValue::Uncertainty { error, .. } => NumericValue::Uncertainty {
+                            nominal: display_f,
+                            error: error / def.scale,
+                        },
+                        _ => {
+                            if display_f.fract() == 0.0 && display_f.abs() < 1e15 {
+                                NumericValue::from_f64(display_f)
+                            } else {
+                                NumericValue::from_f64(display_f)
+                            }
+                        }
+                    };
+                    return format!("{} {}", display_val, u);
+                }
+            }
+            format!("{} {}", self.value, u)
+        } else if self.dimension.is_dimensionless() {
+            format!("{}", self.value)
+        } else {
+            let unit_name = if self.dimension == Dimension::LENGTH {
+                "m"
+            } else if self.dimension == Dimension::MASS {
+                "kg"
+            } else if self.dimension == Dimension::TIME {
+                "s"
+            } else if self.dimension == Dimension::CURRENT {
+                "A"
+            } else if self.dimension == Dimension::TEMPERATURE {
+                "K"
+            } else if self.dimension == Dimension::VELOCITY {
+                "m/s"
+            } else if self.dimension == Dimension::FORCE {
+                "N"
+            } else if self.dimension == Dimension::ENERGY {
+                "J"
+            } else if self.dimension == Dimension::POWER {
+                "W"
+            } else if self.dimension == Dimension::PRESSURE {
+                "Pa"
+            } else if self.dimension == Dimension::DIGITAL {
+                "bit"
+            } else if self.dimension == Dimension::CURRENCY {
+                "USD"
+            } else if self.dimension == Dimension::LENGTH.pow(2) {
+                "m^2"
+            } else if self.dimension == Dimension::LENGTH.pow(3) {
+                "m^3"
+            } else {
+                return format!("{} [{}]", self.value, self.dimension);
+            };
+            format!("{} {}", self.value, unit_name)
+        }
+    }
+
     pub fn format_raw(&self) -> String {
         format!("{}", self.value.format_with_base(10, true))
     }

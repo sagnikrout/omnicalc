@@ -10,6 +10,7 @@ pub enum Token {
     Star,
     Slash,
     Percent,
+    PercentPostfix,
     Caret,
     BitXor,
     Ampersand,
@@ -132,9 +133,9 @@ impl<'a> Lexer<'a> {
                 continue;
             }
 
-            // Feet-inches notation: e.g. 5'10" or 5'10
-            if ch.is_ascii_digit() {
-                // Peek ahead to see if it's feet-inches format like 5'10"
+            // Feet-inches notation and numbers (including leading decimal like .5)
+            if ch.is_ascii_digit() || (ch == '.' && self.peek_next().map_or(false, |n| n.is_ascii_digit())) {
+                // Peek ahead to see if it's feet-inches format like 5'10", 5', 10"
                 if let Some(token) = self.try_lex_feet_inches() {
                     tokens.push(token);
                     continue;
@@ -206,7 +207,7 @@ impl<'a> Lexer<'a> {
                             num_str.push(c);
                         }
                         self.advance();
-                    } else if c == '.' && !seen_dot && !seen_exp && self.peek_next().map_or(false, |n| n.is_ascii_digit()) {
+                    } else if c == '.' && !seen_dot && !seen_exp {
                         seen_dot = true;
                         num_str.push(c);
                         self.advance();
@@ -236,6 +237,12 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 tokens.push(Token::Number(num_str));
+
+                // Check for immediate percent postfix with no whitespace (e.g. 50%, 10%)
+                if self.peek() == Some('%') {
+                    self.advance();
+                    tokens.push(Token::PercentPostfix);
+                }
                 continue;
             }
 
@@ -294,16 +301,30 @@ impl<'a> Lexer<'a> {
 
     fn try_lex_feet_inches(&mut self) -> Option<Token> {
         let saved_pos = self.pos;
-        let mut feet_str = String::new();
+        let mut first_num = String::new();
         while let Some(c) = self.peek() {
-            if c.is_ascii_digit() {
-                feet_str.push(c);
+            if c.is_ascii_digit() || c == '.' {
+                first_num.push(c);
                 self.advance();
             } else {
                 break;
             }
         }
 
+        if first_num.is_empty() {
+            self.pos = saved_pos;
+            return None;
+        }
+
+        // Check for standalone inches: e.g. 10"
+        if self.peek() == Some('"') {
+            self.advance();
+            if let Ok(inch) = first_num.parse::<f64>() {
+                return Some(Token::FeetInches(0.0, inch));
+            }
+        }
+
+        // Check for feet (with optional inches): e.g. 5'10" or 5'
         if self.peek() == Some('\'') {
             self.advance(); // consume '\''
             let mut inches_str = String::new();
@@ -318,9 +339,13 @@ impl<'a> Lexer<'a> {
             if self.peek() == Some('"') {
                 self.advance(); // consume '"'
             }
-            if !feet_str.is_empty() && !inches_str.is_empty() {
-                if let (Ok(ft), Ok(inch)) = (feet_str.parse::<f64>(), inches_str.parse::<f64>()) {
-                    return Some(Token::FeetInches(ft, inch));
+            if let Ok(ft) = first_num.parse::<f64>() {
+                if !inches_str.is_empty() {
+                    if let Ok(inch) = inches_str.parse::<f64>() {
+                        return Some(Token::FeetInches(ft, inch));
+                    }
+                } else {
+                    return Some(Token::FeetInches(ft, 0.0));
                 }
             }
         }

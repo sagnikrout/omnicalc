@@ -40,11 +40,11 @@ fn evaluate_str(evaluator: &mut Evaluator, input: &str, raw: bool, base_code: u3
     let mut parser = CalcParser::new(tokens);
     let ast = parser.parse()?;
 
-    if raw {
-        evaluator.eval_raw(&ast)
-    } else if base_code != 10 {
+    if base_code != 10 {
         let q = evaluator.eval_quantity(&ast)?;
-        Ok(q.value.format_with_base(base_code, false))
+        Ok(q.value.format_with_base(base_code, raw))
+    } else if raw {
+        evaluator.eval_raw(&ast, 10)
     } else {
         evaluator.eval(&ast)
     }

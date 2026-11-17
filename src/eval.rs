@@ -74,14 +74,19 @@ impl Evaluator {
                 }
 
                 let q = self.eval_quantity(expr)?;
-                Ok(q.format_plain())
+                if let Some(ref u) = q.unit_str {
+                    if let Ok(converted) = q.to_unit(u, &self.registry) {
+                        return Ok(converted.format_plain());
+                    }
+                }
+                Ok(q.format_with_registry(&self.registry))
             }
         }
     }
 
-    pub fn eval_raw(&mut self, expr: &Expr) -> Result<String, String> {
+    pub fn eval_raw(&mut self, expr: &Expr, base: u32) -> Result<String, String> {
         let q = self.eval_quantity(expr)?;
-        Ok(q.format_raw())
+        Ok(q.value.format_with_base(base, true))
     }
 
     fn is_purely_symbolic(&self, expr: &Expr) -> bool {
@@ -116,11 +121,20 @@ impl Evaluator {
             Expr::Uncertainty { nominal, error } => {
                 let nom_q = self.eval_quantity(nominal)?;
                 let err_q = self.eval_quantity(error)?;
-                if nom_q.dimension != err_q.dimension && !err_q.dimension.is_dimensionless() {
-                    return Err(format!(
-                        "Uncertainty dimension mismatch: nominal ({}) vs error ({})",
-                        nom_q.dimension, err_q.dimension
-                    ));
+                if nom_q.dimension != err_q.dimension {
+                    if nom_q.dimension.is_dimensionless() && !err_q.dimension.is_dimensionless() {
+                        let val = NumericValue::from_uncertainty(nom_q.value.to_f64(), err_q.value.to_f64());
+                        return Ok(Quantity {
+                            value: val,
+                            dimension: err_q.dimension,
+                            unit_str: err_q.unit_str,
+                        });
+                    } else if !err_q.dimension.is_dimensionless() {
+                        return Err(format!(
+                            "Uncertainty dimension mismatch: nominal ({}) vs error ({})",
+                            nom_q.dimension, err_q.dimension
+                        ));
+                    }
                 }
                 let val = NumericValue::from_uncertainty(nom_q.value.to_f64(), err_q.value.to_f64());
                 Ok(Quantity {
@@ -141,22 +155,18 @@ impl Evaluator {
             Expr::Binary(lhs, op, rhs) => {
                 if *op == BinaryOp::Mul {
                     if let Expr::Unit(name) = &**rhs {
-                        if let Some(def) = self.registry.lookup(name) {
-                            if def.offset != 0.0 {
-                                let q_lhs = self.eval_quantity(lhs)?;
-                                if q_lhs.dimension.is_dimensionless() {
-                                    return Quantity::from_unit(q_lhs.value, name, &self.registry);
-                                }
+                        if let Some(_def) = self.registry.lookup(name) {
+                            let q_lhs = self.eval_quantity(lhs)?;
+                            if q_lhs.dimension.is_dimensionless() {
+                                return Quantity::from_unit(q_lhs.value, name, &self.registry);
                             }
                         }
                     }
                     if let Expr::Unit(name) = &**lhs {
-                        if let Some(def) = self.registry.lookup(name) {
-                            if def.offset != 0.0 {
-                                let q_rhs = self.eval_quantity(rhs)?;
-                                if q_rhs.dimension.is_dimensionless() {
-                                    return Quantity::from_unit(q_rhs.value, name, &self.registry);
-                                }
+                        if let Some(_def) = self.registry.lookup(name) {
+                            let q_rhs = self.eval_quantity(rhs)?;
+                            if q_rhs.dimension.is_dimensionless() {
+                                return Quantity::from_unit(q_rhs.value, name, &self.registry);
                             }
                         }
                     }
@@ -187,6 +197,12 @@ impl Evaluator {
                             return Err("Exponent must be dimensionless".to_string());
                         }
                         let exp_f = q_rhs.value.to_f64();
+                        if q_lhs.value.is_zero() && exp_f < 0.0 {
+                            return Err("Division by zero in power".to_string());
+                        }
+                        if exp_f.abs() > 100_000.0 && !q_lhs.value.is_one() && !q_lhs.value.is_zero() {
+                            return Err(format!("Exponent too large: exponent {} exceeds 100,000", exp_f));
+                        }
                         let new_dim = q_lhs.dimension.pow(exp_f as i8);
                         let new_val = q_lhs.value.pow(&q_rhs.value);
                         Ok(Quantity {
@@ -212,18 +228,26 @@ impl Evaluator {
                     }
                     BinaryOp::Shl => {
                         let a = q_lhs.value.to_f64() as i64;
-                        let b = q_rhs.value.to_f64() as u32;
-                        if b >= 64 {
-                            return Err(format!("Bit shift overflow: shift amount {} exceeds maximum 63", b));
+                        let shift_f = q_rhs.value.to_f64();
+                        if shift_f < 0.0 {
+                            return Err(format!("Negative shift amount {} is invalid", shift_f));
                         }
+                        if shift_f >= 64.0 {
+                            return Err(format!("Bit shift overflow: shift amount {} exceeds maximum 63", shift_f as u64));
+                        }
+                        let b = shift_f as u32;
                         Ok(Quantity::dimensionless(NumericValue::from_i64(a << b)))
                     }
                     BinaryOp::Shr => {
                         let a = q_lhs.value.to_f64() as i64;
-                        let b = q_rhs.value.to_f64() as u32;
-                        if b >= 64 {
-                            return Err(format!("Bit shift overflow: shift amount {} exceeds maximum 63", b));
+                        let shift_f = q_rhs.value.to_f64();
+                        if shift_f < 0.0 {
+                            return Err(format!("Negative shift amount {} is invalid", shift_f));
                         }
+                        if shift_f >= 64.0 {
+                            return Err(format!("Bit shift overflow: shift amount {} exceeds maximum 63", shift_f as u64));
+                        }
+                        let b = shift_f as u32;
                         Ok(Quantity::dimensionless(NumericValue::from_i64(a >> b)))
                     }
                 }
@@ -252,6 +276,22 @@ impl Evaluator {
 
         match name {
             "sqrt" => {
+                let d = &first.dimension;
+                if d.length % 2 != 0
+                    || d.mass % 2 != 0
+                    || d.time % 2 != 0
+                    || d.current % 2 != 0
+                    || d.temperature % 2 != 0
+                    || d.amount % 2 != 0
+                    || d.luminosity % 2 != 0
+                    || d.digital % 2 != 0
+                    || d.currency % 2 != 0
+                {
+                    return Err(format!(
+                        "Dimensional error: square root of dimension [{}] is not divisible by 2",
+                        d
+                    ));
+                }
                 let new_dim = Dimension {
                     length: first.dimension.length / 2,
                     mass: first.dimension.mass / 2,
@@ -304,6 +344,9 @@ impl Evaluator {
                 } else {
                     (0.0, 1.0)
                 };
+                if std <= 0.0 {
+                    return Err(format!("Standard deviation must be positive (got {})", std));
+                }
                 let z = (x - mean) / (std * std::f64::consts::SQRT_2);
                 let cdf = 0.5 * (1.0 + erf(z));
                 Ok(Quantity::dimensionless(NumericValue::from_f64(cdf)))
