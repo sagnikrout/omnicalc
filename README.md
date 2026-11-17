@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/badge/version-2026.11.18-blue.svg)](https://github.com/sagnikrout/omnicalc)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-442%2F442%20passed-brightgreen.svg)](destructive_test_v2.sh)
+[![Tests](https://img.shields.io/badge/tests-442%2F442%20passed-brightgreen.svg)](destructive_test.sh)
 [![Benchmark](https://img.shields.io/badge/latency-0.80%20ms-purple.svg)](benchmark_comparison.py)
 
 ---
@@ -155,17 +155,15 @@ omnicalc> cbrt(-8)
 
 The codebase is validated against 442 automated destructive tests with a 100% pass rate:
 
-1. **Master Catalog Runner (85 tests):**
-   ```bash
-   python3 test_catalog_runner.py
-   ```
-2. **Destructive Boundary Battery v2 (172 tests):**
-   ```bash
-   ./destructive_test_v2.sh
-   ```
-3. **Comprehensive Regression Battery v1 (270 tests):**
+1. **Master Destructive Test Suite (442 tests):**
    ```bash
    ./destructive_test.sh
+   ```
+   Validates basic arithmetic, arbitrary-precision rationals, physical dimensions, complex Euler identities, Newton-Raphson solvers, Gaussian uncertainties, and edge-case crash probes.
+
+2. **Rust Integration Suite:**
+   ```bash
+   cargo test
    ```
 
 ---

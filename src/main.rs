@@ -58,6 +58,20 @@ fn evaluate_str(evaluator: &mut Evaluator, input: &str, raw: bool, base_code: u3
     }
 }
 
+fn print_or_exit(eval_result: Result<String, String>) {
+    match eval_result {
+        Ok(output) => {
+            if !output.is_empty() {
+                println!("{}", output);
+            }
+        }
+        Err(err) => {
+            eprintln!("Error: {}", err);
+            std::process::exit(1);
+        }
+    }
+}
+
 fn parse_base_str(base_str: &str) -> u32 {
     match base_str.to_lowercase().as_str() {
         "hex" | "16" | "x" => 16,
@@ -85,17 +99,7 @@ fn main() {
     }
 
     if let Some(expr_str) = direct_expr {
-        match evaluate_str(&mut evaluator, &expr_str, args.raw, base_code) {
-            Ok(output) => {
-                if !output.is_empty() {
-                    println!("{}", output);
-                }
-            }
-            Err(err) => {
-                eprintln!("Error: {}", err);
-                std::process::exit(1);
-            }
-        }
+        print_or_exit(evaluate_str(&mut evaluator, &expr_str, args.raw, base_code));
         return;
     }
 
@@ -110,17 +114,7 @@ fn main() {
                     if trimmed.is_empty() || trimmed.starts_with('#') {
                         continue;
                     }
-                    match evaluate_str(&mut evaluator, trimmed, args.raw, base_code) {
-                        Ok(output) => {
-                            if !output.is_empty() {
-                                println!("{}", output);
-                            }
-                        }
-                        Err(err) => {
-                            eprintln!("Error: {}", err);
-                            std::process::exit(1);
-                        }
-                    }
+                    print_or_exit(evaluate_str(&mut evaluator, trimmed, args.raw, base_code));
                 }
                 Err(err) => {
                     eprintln!("I/O error: {}", err);
