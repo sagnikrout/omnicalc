@@ -74,6 +74,12 @@ Type expressions directly; type `exit` or `quit` to leave.
 
 ---
 
+## Roadmap & Future Milestones
+
+See [ROADMAP.md](/home/sagnik/code/omnicalc/ROADMAP.md) for the phased master engineering plan to expand calculus, vector/matrix algebra, shell completions, fuzzing, and cross-platform packaging.
+
+---
+
 ## License
 
 Licensed under the MIT License ([LICENSE](LICENSE)).
