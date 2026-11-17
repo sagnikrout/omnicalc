@@ -2,6 +2,13 @@
 name = "omnicalc"
 version = "0.1.0"
 edition = "2024"
+authors = ["Sagnik <sagnik@localhost>"]
+description = "High-performance scientific CLI calculator, physical unit converter, and Computer Algebra System"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/omnicalc/omnicalc"
+readme = "README.md"
+keywords = ["calculator", "units", "cas", "physics", "cli"]
+categories = ["command-line-utilities", "science"]
 
 [dependencies]
 clap = { version = "4.6.8", features = ["derive"] }
@@ -10,3 +17,10 @@ num-complex = "0.4.6"
 num-rational = "0.4.2"
 num-traits = "0.2.19"
 rustyline = "19.0.0"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
