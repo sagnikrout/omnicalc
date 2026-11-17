@@ -1,0 +1,348 @@
+[T301] [Arithmetic] Zero to negative power (0^-1 panic probe) | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e 0^-1
+  Stderr: Error: Division by zero in power
+--------------------------------------------------------------------------------
+[T302] [Arithmetic] Zero to negative two (0^-2 panic probe) | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e 0^-2
+  Stderr: Error: Division by zero in power
+--------------------------------------------------------------------------------
+[T303] [Arithmetic] Zero to power zero (0^0 exact definition) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 0^0
+  Stdout: 1
+--------------------------------------------------------------------------------
+[T304] [Arithmetic] Large exponent loop exhaustion (2^10000000 hang probe) | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e 2^10000000
+  Stderr: Error: Exponent too large: exponent 10000000 exceeds 100,000
+--------------------------------------------------------------------------------
+[T305] [Arithmetic] Negative base fractional power (-1)^0.5 complex evaluation | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e (-1)^0.5
+  Stdout: i
+--------------------------------------------------------------------------------
+[T306] [Arithmetic] Negative base fractional power (-4)^0.5 complex evaluation | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e (-4)^0.5
+  Stdout: 2i
+--------------------------------------------------------------------------------
+[T307] [Arithmetic] Negative base cube root (-8)^(1/3) principal complex root | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e (-8)^(1/3)
+  Stdout: 1 + 1.7320508076i
+--------------------------------------------------------------------------------
+[T308] [Arithmetic] Exact rational cube root cbrt(-8) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e cbrt(-8)
+  Stdout: -2
+--------------------------------------------------------------------------------
+[T309] [Arithmetic] Modulo by zero with float 5 % 0.0 | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e 5 % 0.0
+  Stderr: Error: Division by zero in modulus
+--------------------------------------------------------------------------------
+[T310] [Arithmetic] Exact zero modulo 0 % 5 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 0 % 5
+  Stdout: 0
+--------------------------------------------------------------------------------
+[T311] [Recursion] Deeply nested parentheses (1000 parens) | Status: PASS | Exit: 1
+  Command: python3 -c "print('(' * 1000 + '1' + ')' * 1000)" | /home/sagnik/bin/omnicalc
+  Stderr: Error: Recursion depth limit exceeded
+--------------------------------------------------------------------------------
+[T312] [Recursion] Deeply nested unary pluses (1000 pluses) | Status: PASS | Exit: 1
+  Command: python3 -c "print('+' * 1000 + '1')" | /home/sagnik/bin/omnicalc
+  Stderr: Error: Recursion depth limit exceeded
+--------------------------------------------------------------------------------
+[T313] [Recursion] Deeply nested unary minuses (1000 minuses) | Status: PASS | Exit: 1
+  Command: python3 -c "print('-' * 1000 + '1')" | /home/sagnik/bin/omnicalc
+  Stderr: Error: Recursion depth limit exceeded
+--------------------------------------------------------------------------------
+[T314] [Recursion] Moderate nested parentheses (50 parens - should pass) | Status: PASS | Exit: 0
+  Command: python3 -c "print('(' * 50 + '42' + ')' * 50)" | /home/sagnik/bin/omnicalc
+  Stdout: 42
+--------------------------------------------------------------------------------
+[T315] [Complex] Euler's identity exp(i * pi) should equal -1 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e exp(i * pi)
+  Stdout: -1
+--------------------------------------------------------------------------------
+[T316] [Complex] Complex sine sin(i) should equal ~1.1752i | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e sin(i)
+  Stdout: 1.1752011936i
+--------------------------------------------------------------------------------
+[T317] [Complex] Complex cosine cos(i) should equal ~1.54308 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e cos(i)
+  Stdout: 1.5430806348
+--------------------------------------------------------------------------------
+[T318] [Complex] Complex tangent tan(i) should equal ~0.76159i | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e tan(i)
+  Stdout: 0.761594156i
+--------------------------------------------------------------------------------
+[T319] [Complex] Complex exponential exp(1 + i) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e exp(1 + i)
+  Stdout: 1.4686939399 + 2.2873552872i
+--------------------------------------------------------------------------------
+[T320] [Complex] Logarithm of negative number log10(-1) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e log10(-1)
+  Stdout: 1.3643763538i
+--------------------------------------------------------------------------------
+[T321] [Complex] Natural log of negative number ln(-1) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e ln(-1)
+  Stdout: 3.1415926536i
+--------------------------------------------------------------------------------
+[T322] [Complex] Imaginary unit powered by itself i^i | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e i^i
+  Stdout: 0.2078795764
+--------------------------------------------------------------------------------
+[T323] [Complex] Complex reciprocal 1 / i | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 1 / i
+  Stdout: -i
+--------------------------------------------------------------------------------
+[T324] [Complex] Complex reciprocal 1 / (1 + i) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 1 / (1 + i)
+  Stdout: 0.5 - 0.5i
+--------------------------------------------------------------------------------
+[T325] [Uncertainty] Multiplication when nominal is zero (0 +/- 1) * (5 +/- 1) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e (0 +/- 1) * (5 +/- 1)
+  Stdout: 0.0000±5.0000
+--------------------------------------------------------------------------------
+[T326] [Uncertainty] Division when nominal is zero (0 +/- 1) / (5 +/- 1) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e (0 +/- 1) / (5 +/- 1)
+  Stdout: 0.0000±0.2000
+--------------------------------------------------------------------------------
+[T327] [Uncertainty] Product of zero-error and non-zero (10 +/- 0) * (5 +/- 1) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e (10 +/- 0) * (5 +/- 1)
+  Stdout: 50.0000±10.0000
+--------------------------------------------------------------------------------
+[T328] [Uncertainty] Square root of uncertainty sqrt(4 +/- 0.4) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e sqrt(4 +/- 0.4)
+  Stdout: 2.0000±0.1000
+--------------------------------------------------------------------------------
+[T329] [Uncertainty] Square of uncertainty (2 +/- 0.1)^2 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e (2 +/- 0.1)^2
+  Stdout: 4.0000±0.4000
+--------------------------------------------------------------------------------
+[T330] [Uncertainty] Precedence of uncertainty with units 10 m +/- 1 m | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 10 m +/- 1 m
+  Stdout: 10.0000±1.0000 m
+--------------------------------------------------------------------------------
+[T331] [Lexer] Leading decimal dot .5 + .5 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e .5 + .5
+  Stdout: 1
+--------------------------------------------------------------------------------
+[T332] [Lexer] Leading decimal dot in subtraction .75 - .25 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e .75 - .25
+  Stdout: 0.5
+--------------------------------------------------------------------------------
+[T333] [Lexer] Trailing decimal dot 5. + 5. | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 5. + 5.
+  Stdout: 10
+--------------------------------------------------------------------------------
+[T334] [Lexer] Trailing decimal dot in product 2.5 * 4. | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 2.5 * 4.
+  Stdout: 10
+--------------------------------------------------------------------------------
+[T335] [Lexer] Negative leading decimal dot -.5 * 2 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e -.5 * 2
+  Stdout: -1
+--------------------------------------------------------------------------------
+[T336] [Lexer] Scientific notation with capital E: 1E6 + 1E3 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 1E6 + 1E3
+  Stdout: 1001000
+--------------------------------------------------------------------------------
+[T337] [Lexer] Scientific notation with positive exponent 2.5e+3 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 2.5e+3
+  Stdout: 2500
+--------------------------------------------------------------------------------
+[T338] [Lexer] Incomplete scientific notation 1e * 2 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 1e * 2
+  Stdout: 5.4365636569
+--------------------------------------------------------------------------------
+[T339] [Bitwise] 64-bit unsigned hex mask 0xffffffffffffffff | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 0xffffffffffffffff
+  Stdout: 18446744073709551615
+--------------------------------------------------------------------------------
+[T340] [Bitwise] 64-bit unsigned hex mask to hex | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 0xffffffffffffffff to hex
+  Stdout: 0xffffffffffffffff
+--------------------------------------------------------------------------------
+[T341] [Bitwise] 128-bit hex literal 0x10000000000000000 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 0x10000000000000000
+  Stdout: 18446744073709551616
+--------------------------------------------------------------------------------
+[T342] [Bitwise] 64-bit binary literal bit 63 set | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 0b1000000000000000000000000000000000000000000000000000000000000000
+  Stdout: 9223372036854775808
+--------------------------------------------------------------------------------
+[T343] [Bitwise] Negative left shift 1 << -1 (must reject) | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e 1 << -1
+  Stderr: Error: Negative shift amount -1 is invalid
+--------------------------------------------------------------------------------
+[T344] [Bitwise] Negative right shift 1 >> -5 (must reject) | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e 1 >> -5
+  Stderr: Error: Negative shift amount -5 is invalid
+--------------------------------------------------------------------------------
+[T345] [Bitwise] Shift amount exceeding 63 bits 1 << 64 | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e 1 << 64
+  Stderr: Error: Bit shift overflow: shift amount 64 exceeds maximum 63
+--------------------------------------------------------------------------------
+[T346] [Bitwise] Bitwise NOT of zero to hex (~0 to hex) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e ~0 to hex
+  Stdout: 0x-1
+--------------------------------------------------------------------------------
+[T347] [Percent] Modulo with variable: 50 % x (must be remainder) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 50 % x
+  Stdout: 50 % x
+--------------------------------------------------------------------------------
+[T348] [Percent] Modulo with negative operand 10 % -3 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 10 % -3
+  Stdout: 1
+--------------------------------------------------------------------------------
+[T349] [Percent] Modulo with hex operand 10 % 0x3 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 10 % 0x3
+  Stdout: 1
+--------------------------------------------------------------------------------
+[T350] [Percent] Percentage of value: 50% of 200 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 50% of 200
+  Stdout: 100
+--------------------------------------------------------------------------------
+[T351] [Percent] Simple percentage: 50% | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 50%
+  Stdout: 1/2
+--------------------------------------------------------------------------------
+[T352] [Percent] Addition of percentage: 100 + 10% | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 100 + 10%
+  Stdout: 1001/10
+--------------------------------------------------------------------------------
+[T353] [Units] Conversion to inches using 'to in': 5 cm to in | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 5 cm to in
+  Stdout: 1.968503937 in
+--------------------------------------------------------------------------------
+[T354] [Units] Conversion to inches using 'in in': 5 cm in in | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 5 cm in in
+  Stdout: 1.968503937 in
+--------------------------------------------------------------------------------
+[T355] [Units] Conversion from inches: 10 in to cm | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 10 in to cm
+  Stdout: 25.4 cm
+--------------------------------------------------------------------------------
+[T356] [Units] Feet notation standalone: 5' to cm | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 5' to cm
+  Stdout: 152.4 cm
+--------------------------------------------------------------------------------
+[T357] [Units] Inches notation standalone: 10" to cm | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 10" to cm
+  Stdout: 25.4 cm
+--------------------------------------------------------------------------------
+[T358] [Units] Combined feet and inches: 5'10" to cm | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 5'10" to cm
+  Stdout: 177.8 cm
+--------------------------------------------------------------------------------
+[T359] [Units] Compound target unit with slash: 100 km/h to m/s | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 100 km/h to m/s
+  Stdout: 27.7777777778 m/s
+--------------------------------------------------------------------------------
+[T360] [Units] Compound target unit with power: 100 N / 2 m^2 to Pa | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 100 N / 2 m^2 to Pa
+  Stdout: 50 Pa
+--------------------------------------------------------------------------------
+[T361] [Units] Unit preservation in single quantity: 5 km | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 5 km
+  Stdout: 5 km
+--------------------------------------------------------------------------------
+[T362] [Units] Celsius display without conversion: 10 degC | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 10 degC
+  Stdout: 10 degC
+--------------------------------------------------------------------------------
+[T363] [Units] Fahrenheit display without conversion: 100 degF | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 100 degF
+  Stdout: 100 degF
+--------------------------------------------------------------------------------
+[T364] [Units] Odd dimensional square root sqrt(4 m) (must reject) | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e sqrt(4 m)
+  Stderr: Error: Dimensional error: square root of dimension [L] is not divisible by 2
+--------------------------------------------------------------------------------
+[T365] [Units] Valid dimensional square root sqrt(4 m^2) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e sqrt(4 m^2)
+  Stdout: 2 m
+--------------------------------------------------------------------------------
+[T366] [Equations] Trigonometric equation sin(x) = 0 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e sin(x) = 0
+  Stdout: x ≈ 0.000000
+--------------------------------------------------------------------------------
+[T367] [Equations] Trigonometric equation cos(x) = 0 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e cos(x) = 0
+  Stdout: x ≈ 1.570796
+--------------------------------------------------------------------------------
+[T368] [Equations] Exponential equation exp(x) = 10 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e exp(x) = 10
+  Stdout: x ≈ 2.302585
+--------------------------------------------------------------------------------
+[T369] [Equations] Logarithmic equation ln(x) = 2 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e ln(x) = 2
+  Stdout: x ≈ 7.389056
+--------------------------------------------------------------------------------
+[T370] [Equations] Square root equation sqrt(x) = 4 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e sqrt(x) = 4
+  Stdout: x ≈ 16.000000
+--------------------------------------------------------------------------------
+[T371] [Equations] Polynomial cubic equation x^3 - 27 = 0 | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e x^3 - 27 = 0
+  Stdout: x ≈ 3.000000
+--------------------------------------------------------------------------------
+[T372] [Symbolic] Double prime second derivative (x^3)'' | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e (x^3)''
+  Stdout: 6x
+--------------------------------------------------------------------------------
+[T373] [Symbolic] Nested diff second derivative diff(diff(x^3, x), x) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e diff(diff(x^3, x), x)
+  Stdout: 6x
+--------------------------------------------------------------------------------
+[T374] [Symbolic] Derivative of tangent diff(tan(x), x) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e diff(tan(x), x)
+  Stdout: 1 / cos(x) ^ 2
+--------------------------------------------------------------------------------
+[T375] [Symbolic] Derivative of square root diff(sqrt(x), x) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e diff(sqrt(x), x)
+  Stdout: 1 / 2 * sqrt(x)
+--------------------------------------------------------------------------------
+[T376] [Symbolic] Integer prime factorization 12 to factors | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 12 to factors
+  Stdout: 2^2 * 3
+--------------------------------------------------------------------------------
+[T377] [Symbolic] Prime number factorization 13 to factors | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e 13 to factors
+  Stdout: 13
+--------------------------------------------------------------------------------
+[T378] [CLI] Raw mode with hex base (-r -b hex -e 255) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -r -b hex -e 255
+  Stdout: ff
+--------------------------------------------------------------------------------
+[T379] [CLI] Raw mode with binary base (-r -b bin -e 10) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -r -b bin -e 10
+  Stdout: 1010
+--------------------------------------------------------------------------------
+[T380] [CLI] Raw mode with octal base (-r -b oct -e 64) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -r -b oct -e 64
+  Stdout: 100
+--------------------------------------------------------------------------------
+[T381] [CLI] Positional expression with negative arguments | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -- -5 + 10
+  Stdout: 5
+--------------------------------------------------------------------------------
+[T382] [CLI] Empty string input exits non-zero | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e 
+  Stderr: Error: Empty input
+--------------------------------------------------------------------------------
+[T383] [Statistics] Standard normal distribution normdist(0) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e normdist(0)
+  Stdout: 0.5000000005
+--------------------------------------------------------------------------------
+[T384] [Statistics] Normal distribution with zero std dev normdist(0, 0, 0) | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e normdist(0, 0, 0)
+  Stderr: Error: Standard deviation must be positive (got 0)
+--------------------------------------------------------------------------------
+[T385] [Statistics] Normal distribution with negative std dev normdist(1, 0, -1) | Status: PASS | Exit: 1
+  Command: /home/sagnik/bin/omnicalc -e normdist(1, 0, -1)
+  Stderr: Error: Standard deviation must be positive (got -1)
+--------------------------------------------------------------------------------
+[T386] [Statistics] Normal distribution extreme positive normdist(1e30) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e normdist(1e30)
+  Stdout: 1
+--------------------------------------------------------------------------------
+[T387] [Statistics] Normal distribution extreme negative normdist(-1e30) | Status: PASS | Exit: 0
+  Command: /home/sagnik/bin/omnicalc -e normdist(-1e30)
+  Stdout: 0
+--------------------------------------------------------------------------------

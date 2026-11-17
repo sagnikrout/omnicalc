@@ -1,8 +1,8 @@
 ============================================================================
 OMNICALC DESTRUCTIVE TEST LOG
-Date: 2026-11-17T22:29:18+05:30
+Date: 2026-11-18T00:25:11+05:30
 Binary: /home/sagnik/code/omnicalc/target/release/omnicalc
-Binary size: 1994640 bytes
+Binary size: 2051264 bytes
 ============================================================================
 
 --- Section 1: Empty & Degenerate Input ---
@@ -174,7 +174,7 @@ Binary size: 1994640 bytes
 
 [T041] PASS    [FLOAT] Leading decimal point
          Input:    .5 + .5
-         Output:   Error: Unexpected character: '.' at position 0
+         Output:   1
 
 [T042] PASS    [FLOAT] Number with underscores
          Input:    1_000_000
@@ -286,7 +286,7 @@ Binary size: 1994640 bytes
 
 [T068] PASS    [BITWISE] Shift by 63
          Input:    1 << 63
-         Output:   -9223372036854775808
+         Output:   9223372036854775808
 
 [T069] PASS    [BITWISE] Large shift (overflow)
          Input:    1 << 64
@@ -376,7 +376,7 @@ Binary size: 1994640 bytes
 
 [T090] PASS    [UNITS] Dimensional mismatch
          Input:    1 m to s
-         Output:   Error: Dimensional mismatch: cannot convert 1 (L) to 's' (T)
+         Output:   Error: Dimensional mismatch: cannot convert 1 m (L) to 's' (T)
 
 [T091] PASS    [UNITS] Dimensional mismatch add
          Input:    5 m + 3 kg
@@ -590,7 +590,7 @@ Binary size: 1994640 bytes
 
 [T141] PASS    [FACTOR] Constant
          Input:    factor(42)
-         Output:   42
+         Output:   2 * 3 * 7
 
 --- Section 12: Math Functions ---
 
@@ -672,7 +672,7 @@ Binary size: 1994640 bytes
 
 [T161] PASS    [FUNC] ln(-1)
          Input:    ln(-1)
-         Output:   3.141592653589793i
+         Output:   3.1415926536i
 
 [T162] PASS    [FUNC] log10(100)
          Input:    log10(100)
@@ -842,7 +842,7 @@ Binary size: 1994640 bytes
 
 [T201] PASS    [PARSE] Multiple dots
          Input:    1.2.3
-         Output:   Error: Unexpected character: '.' at position 3
+         Output:   0.36
 
 [T202] PASS    [PARSE] Only dot
          Input:    .
@@ -1000,15 +1000,15 @@ Error: Division by zero
 
 [T234] PASS    [DIM] Multiply m * m = m^2
          Input:    2 m * 3 m
-         Output:   6
+         Output:   6 m^2
 
 [T235] PASS    [DIM] Divide m / s = velocity
          Input:    10 m / 2 s
-         Output:   5
+         Output:   5 m/s
 
 [T236] PASS    [DIM] F = m*a units
          Input:    5 kg * 10 m / (1 s^2)
-         Output:   50
+         Output:   50 N
 
 [T237] PASS    [DIM] Energy = F*d
          Input:    10 N * 5 m to J
@@ -1024,7 +1024,7 @@ Error: Division by zero
 
 [T240] PASS    [DIM] Add same dim
          Input:    5 m + 3 m
-         Output:   8
+         Output:   8 m
 
 [T241] PASS    [DIM] Add different dim
          Input:    5 m + 3 s
@@ -1032,7 +1032,7 @@ Error: Division by zero
 
 [T242] PASS    [DIM] Exponent with dim
          Input:    (2 m)^3
-         Output:   8
+         Output:   8 m^3
 
 [T243] PASS    [DIM] Dim exponent (error)
          Input:    2^(3 m)
@@ -1108,7 +1108,7 @@ Error: Division by zero
 
 [T259] PASS    [COMBO] Uncertainty + conversion
          Input:    (100±2 degC) to degF
-         Output:   212.0000±3.6000 degF
+         Output:   -279.6700±495.2700 degF
 
 [T260] PASS    [COMBO] Percent of unit
          Input:    10% of 1 km to m
@@ -1124,7 +1124,7 @@ Error: Division by zero
 
 [T263] PASS    [COMBO] Function + unit
          Input:    sqrt(4 m^2)
-         Output:   2
+         Output:   2 m
 
 [T264] PASS    [COMBO] Chained convert attempt
          Input:    1 km to m to cm
