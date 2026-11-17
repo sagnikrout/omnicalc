@@ -73,6 +73,12 @@ run_test() {
     local expectation="$4"
     shift 4
 
+    local pipe_in=""
+    if [ "$1" = "--pipe" ]; then
+        pipe_in="$2"
+        shift 2
+    fi
+
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
 
     local stdout_file
@@ -82,7 +88,11 @@ run_test() {
 
     local exit_code=0
     # Execute with timeout 2s preserving exact argument boundaries
-    timeout 2s "$BINARY" "$@" > "$stdout_file" 2> "$stderr_file" || exit_code=$?
+    if [ -n "$pipe_in" ]; then
+        echo "$pipe_in" | timeout 2s "$BINARY" "$@" > "$stdout_file" 2> "$stderr_file" || exit_code=$?
+    else
+        timeout 2s "$BINARY" "$@" > "$stdout_file" 2> "$stderr_file" || exit_code=$?
+    fi
 
     local stdout
     local stderr
@@ -393,15 +403,17 @@ run_test "T387" "Statistics" "Normal distribution extreme negative normdist(-1e3
 # ------------------------------------------------------------------------------
 # CATEGORY 13: MASTER CROSS-CALCULATOR ECOSYSTEM INTEGRATION (85-TEST CATALOG)
 # ------------------------------------------------------------------------------
-echo -e "\n${BLUE}=== CATEGORY 13: Master Cross-Calculator Ecosystem Integration ===${NC}"
+echo -e "\n${BLUE}=== CATEGORY 13: Master Cross-Calculator Ecosystem Integration (85 Tests) ===${NC}"
 run_test "TC-PREC-01" "Precedence" "Unary minus vs power: -2^2" "SUCCESS:-4" -e '-2^2'
 run_test "TC-PREC-02" "Precedence" "Grouped power: (-2)^2" "SUCCESS:4" -e '(-2)^2'
 run_test "TC-PREC-03" "Precedence" "Right associative power: 2^3^2" "SUCCESS:512" -e '2^3^2'
-run_test "TC-PREC-04" "Precedence" "Implicit multiplication binding: 1 / 2x" "SUCCESS:1 / 2x" -e '1 / 2x'
-run_test "TC-PREC-05" "Precedence" "Explicit multiplication: 1 / 2 * 4" "SUCCESS:2" -e '1 / 2 * 4'
+run_test "TC-PREC-04" "Precedence" "Implicit multiplication binding: 1/2x" "SUCCESS:1 / 2x" -e '1 / 2x'
+run_test "TC-PREC-05" "Precedence" "Explicit multiplication: 1/2*x" "SUCCESS:2" -e '1 / 2 * 4'
 run_test "TC-PREC-06" "Precedence" "Unit denominator binding: 100 J / 10 s" "SUCCESS:10 W" -e '100 J / 10 s'
-run_test "TC-PREC-07" "Precedence" "Modulo before addition: 10 % 3 + 2" "SUCCESS:3" -e '10 % 3 + 2'
-run_test "TC-PREC-08" "Precedence" "Bitwise shift precedence: 1 << 2 + 1" "SUCCESS:8" -e '1 << 2 + 1'
+run_test "TC-PREC-07" "Precedence" "Explicit unit multiplication: 100 J / 10 * 1 s" "SUCCESS:10" -e '100 J / 10 * 1 s'
+run_test "TC-PREC-08" "Precedence" "Factorial function precedence: fact(5) + 3" "SUCCESS:123" -e 'fact(5) + 3'
+run_test "TC-PREC-09" "Precedence" "Bitwise shift precedence: 1 << 2 + 3" "SUCCESS:32" -e '1 << 2 + 3'
+run_test "TC-PREC-10" "Precedence" "Modulo before addition: 10 % 3 + 2" "SUCCESS:3" -e '10 % 3 + 2'
 run_test "TC-PARSE-01" "Parser" "Leading decimal dot: .5 + .5" "SUCCESS:1" -e '.5 + .5'
 run_test "TC-PARSE-02" "Parser" "Trailing decimal dot: 5. + 5." "SUCCESS:10" -e '5. + 5.'
 run_test "TC-PARSE-03" "Parser" "Scientific notation lowercase and uppercase: 1e3 + 1E3" "SUCCESS:2000" -e '1e3 + 1E3'
@@ -417,9 +429,11 @@ run_test "TC-NUM-02" "Numeric" "Zero to power zero: 0^0" "SUCCESS:1" -e '0^0'
 run_test "TC-NUM-03" "Numeric" "Massive exponent limit: 2^10000000" "ERROR:Exponent too large" -e '2^10000000'
 run_test "TC-NUM-04" "Numeric" "Exact rational multiplication: 1/3 * 3" "SUCCESS:1" -e '1/3 * 3'
 run_test "TC-NUM-05" "Numeric" "Modulo by float zero: 5 % 0.0" "ERROR:Division by zero in modulus" -e '5 % 0.0'
-run_test "TC-NUM-06" "Numeric" "Exact cube root: cbrt(-8)" "SUCCESS:-2" -e 'cbrt(-8)'
-run_test "TC-NUM-07" "Numeric" "Bit shift overflow: 1 << 64" "ERROR:exceeds maximum 63" -e '1 << 64'
-run_test "TC-NUM-08" "Numeric" "Negative shift: 1 >> -5" "ERROR:Negative shift amount" -e '1 >> -5'
+run_test "TC-NUM-06" "Numeric" "Small angle cos precision: 1 - cos(1e-8)" "SUCCESS:0" -e '1 - cos(1e-8)'
+run_test "TC-NUM-07" "Numeric" "Exact cube root: cbrt(-8)" "SUCCESS:-2" -e 'cbrt(-8)'
+run_test "TC-NUM-08" "Numeric" "Formatting non-finite radix: bin(inf)" "ERROR:Unknown unit" -e 'bin(inf)'
+run_test "TC-NUM-09" "Numeric" "Bit shift overflow: 1 << 64" "ERROR:exceeds maximum 63" -e '1 << 64'
+run_test "TC-NUM-10" "Numeric" "Negative shift: 1 >> -5" "ERROR:Negative shift amount" -e '1 >> -5'
 run_test "TC-COMP-01" "Complex" "Euler's identity: exp(i * pi)" "SUCCESS:-1" -e 'exp(i * pi)'
 run_test "TC-COMP-02" "Complex" "Square root of negative one: (-1)^0.5" "SUCCESS:i" -e '(-1)^0.5'
 run_test "TC-COMP-03" "Complex" "Square root of negative four: (-4)^0.5" "SUCCESS:2i" -e '(-4)^0.5'
@@ -450,6 +464,8 @@ run_test "TC-TEMP-07" "Temperature" "Unicode degree Celsius to Fahrenheit: 10 °
 run_test "TC-TEMP-08" "Temperature" "Absolute zero Kelvin to Celsius: 0 K to degC" "SUCCESS:-273.15 degC" -e '0 K to degC'
 run_test "TC-CURR-01" "Currency" "Euro to USD conversion: 1 EUR to USD" "SUCCESS:USD" -e '1 EUR to USD'
 run_test "TC-CURR-02" "Currency" "Roundtrip currency: 100 USD to EUR to USD" "SUCCESS:100 USD" -e '100 USD to EUR to USD'
+run_test "TC-CURR-03" "Currency" "Decimal currency conversion: 100.5 EUR to USD" "SUCCESS:104.319 USD" -e '100.5 EUR to USD'
+run_test "TC-CURR-04" "Currency" "Offline currency baseline: 100 EUR to USD" "SUCCESS:103.8 USD" -e '100 EUR to USD'
 run_test "TC-CAS-01" "CAS" "First derivative: diff(x^3, x)" "SUCCESS:3 * x ^ 2" -e 'diff(x^3, x)'
 run_test "TC-CAS-02" "CAS" "Second derivative: diff(diff(x^3, x), x)" "SUCCESS:6x" -e 'diff(diff(x^3, x), x)'
 run_test "TC-CAS-03" "CAS" "Tangent derivative: diff(tan(x), x)" "SUCCESS:1 / cos(x) ^ 2" -e 'diff(tan(x), x)'
@@ -468,9 +484,11 @@ run_test "TC-UNC-05" "Uncertainty" "Power uncertainty: (2 +/- 0.1)^2" "SUCCESS:4
 run_test "TC-UNC-06" "Uncertainty" "Uncertainty with units: 10 m +/- 1 m" "SUCCESS:10.0000±1.0000 m" -e '10 m +/- 1 m'
 run_test "TC-UNC-07" "Uncertainty" "Normal distribution at mean: normdist(0)" "SUCCESS:0.5" -e 'normdist(0)'
 run_test "TC-UNC-08" "Uncertainty" "Normal distribution invalid std: normdist(0, 0, 0)" "ERROR:Standard deviation must be positive" -e 'normdist(0, 0, 0)'
-run_test "TC-CLI-01" "CLI" "Raw mode hex: -r -b hex -e 255" "SUCCESS:ff" -r -b hex -e 255
-run_test "TC-CLI-02" "CLI" "Negative expression escape: -- -5 + 10" "SUCCESS:5" -- '-5 + 10'
-run_test "TC-CLI-03" "CLI" "Empty expression rejection: -e \"\"" "ERROR:Empty input" -e ''
+run_test "TC-CLI-01" "CLI" "Piped stdin evaluation: 5 + 5" "SUCCESS:10" --pipe '5 + 5'
+run_test "TC-CLI-02" "CLI" "Raw mode hex: -r -b hex -e 255" "SUCCESS:ff" -r -b hex -e 255
+run_test "TC-CLI-03" "CLI" "Negative expression escape: -- -5 + 10" "SUCCESS:5" -- '-5 + 10'
+run_test "TC-CLI-04" "CLI" "Empty expression rejection: -e \"\"" "ERROR:Empty input" -e ''
+run_test "TC-CLI-05" "CLI" "Division by zero pipe safety: 1/0" "ERROR:Division by zero" -e 1/0
 
 # ------------------------------------------------------------------------------
 # FINAL REPORT GENERATION
