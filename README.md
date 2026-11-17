@@ -1,8 +1,8 @@
-# cal (`omnicalc`)
+# omnicalc
 
 **The Unified High-Performance Scientific CLI Calculator & Computer Algebra System**
 
-[![Version](https://img.shields.io/badge/version-2026.11.18-blue.svg)](https://github.com/sagnikrout/cal)
+[![Version](https://img.shields.io/badge/version-2026.11.18-blue.svg)](https://github.com/sagnikrout/omnicalc)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-442%2F442%20passed-brightgreen.svg)](destructive_test_v2.sh)
 [![Benchmark](https://img.shields.io/badge/latency-0.80%20ms-purple.svg)](benchmark_comparison.py)
@@ -11,7 +11,7 @@
 
 ## Origin & Vision
 
-**Where It Started:** [https://github.com/sagnikrout/cal](https://github.com/sagnikrout/cal)  
+**Repository:** [https://github.com/sagnikrout/omnicalc](https://github.com/sagnikrout/omnicalc)  
 Conceived years ago by **Sagnik Rout** ([@sagnikrout](https://github.com/sagnikrout)) with relentless optimism: to eliminate the painful compromise in command-line math. 
 
 Engineers were forced to choose between lightweight calculators with limited features or heavyweight C++ Computer Algebra Systems with slow startup times. Sagnik envisioned a unified tool: instant startup (<1 ms), arbitrary precision, dimensional physics, and symbolic computer algebra, built natively in Rust.
@@ -20,31 +20,18 @@ Co-engineered in partnership with **Gemini 3.8 Flash High & Antigravity** ([Goog
 
 ---
 
-## The Naming Architecture: `cal` vs `omnicalc`
+## Shell Aliases & Ergonomics
 
-A common question: *Why is the repository `cal`, but the installed binary named `omnicalc`?*
+The executable binary and package are named `omnicalc` to preserve standard UNIX `/usr/bin/cal` calendar functionality.
 
-On UNIX, Linux, macOS, and BSD systems since 1975 (AT&T UNIX v6), `/usr/bin/cal` is the standard system calendar utility:
-```
-$ cal
-   November 2026      
-Su Mo Tu We Th Fr Sa  
- 1  2  3  4  5  6  7  
- 8  9 10 11 12 13 14  
-15 16 17 18 19 20 21  
-22 23 24 25 26 27 28  
-29 30                 
-```
-
-If our calculator binary installed as `/usr/bin/cal`, it would overwrite or collide with the operating system's calendar, breaking system scripts and failing package manager policies (Debian, Arch, Homebrew).
-
-* **Repository & Project Identity:** `cal` ([https://github.com/sagnikrout/cal](https://github.com/sagnikrout/cal))
-* **Installed System Binary:** `omnicalc` (collision-free)
+* **Repository & Crate Identity:** `omnicalc` ([https://github.com/sagnikrout/omnicalc](https://github.com/sagnikrout/omnicalc))
+* **Installed System Binary:** `omnicalc` (zero collision)
 * **Recommended Shell Aliases:**
   ```bash
   # In ~/.bashrc or ~/.zshrc:
   alias c="omnicalc"
   alias calc="omnicalc"
+  alias cal="omnicalc" # If you prefer overriding system calendar
   ```
 
 ---
@@ -96,8 +83,8 @@ sudo ./install.sh
 
 ### Build from Source
 ```bash
-git clone https://github.com/sagnikrout/cal.git
-cd cal
+git clone https://github.com/sagnikrout/omnicalc.git
+cd omnicalc
 cargo build --release
 sudo cp target/release/omnicalc /usr/local/bin/
 ```
@@ -148,8 +135,8 @@ echo "sqrt(4 m^2)" | omnicalc
 ### Interactive REPL Mode
 ```bash
 $ omnicalc
-omnicalc (cal) v2026.11.18 — Unified CLI Scientific & Physical Engine
-Origin: Sagnik Rout (https://github.com/sagnikrout/cal) | Synthesis: Gemini 3.8 Flash High
+omnicalc v2026.11.18 — Unified CLI Scientific & Physical Engine
+Origin: Sagnik Rout (https://github.com/sagnikrout/omnicalc) | Synthesis: Gemini 3.8 Flash High
 Type 'quit' or 'exit' or press Ctrl-D to exit.
 
 omnicalc> 5 cm to in

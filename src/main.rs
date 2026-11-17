@@ -10,7 +10,7 @@ use std::io::{self, BufRead, IsTerminal};
 #[command(name = "omnicalc")]
 #[command(author = "Sagnik Rout & Gemini 3.8 Flash High (Google DeepMind)")]
 #[command(version = env!("CARGO_PKG_VERSION"))]
-#[command(about = "Unified high-performance scientific CLI calculator & CAS (https://github.com/sagnikrout/cal)")]
+#[command(about = "Unified high-performance scientific CLI calculator & CAS (https://github.com/sagnikrout/omnicalc)")]
 struct Args {
     /// Expression to evaluate directly
     #[arg(short = 'e', long = "eval", allow_hyphen_values = true)]
@@ -132,8 +132,8 @@ fn main() {
     }
 
     // Interactive REPL mode
-    println!("omnicalc (cal) v{} — Unified CLI Scientific & Physical Engine", env!("CARGO_PKG_VERSION"));
-    println!("Origin: Sagnik Rout (https://github.com/sagnikrout/cal) | Synthesis: Gemini 3.8 Flash High");
+    println!("omnicalc v{} — Unified CLI Scientific & Physical Engine", env!("CARGO_PKG_VERSION"));
+    println!("Origin: Sagnik Rout (https://github.com/sagnikrout/omnicalc) | Synthesis: Gemini 3.8 Flash High");
     println!("Synthesis: qalc (CAS/Uncertainty) + Numbat (Dimensional Safety) + fend (Ergonomics) + Kalker (Math Syntax)");
     println!("Type 'quit' or 'exit' or press Ctrl-D to exit.\n");
 
@@ -194,8 +194,8 @@ fn dirs_or_home_history() -> std::path::PathBuf {
 }
 
 fn print_credits() {
-    println!("omnicalc (cal) — Version {}", env!("CARGO_PKG_VERSION"));
-    println!("Repository: https://github.com/sagnikrout/cal");
+    println!("omnicalc — Version {}", env!("CARGO_PKG_VERSION"));
+    println!("Repository: https://github.com/sagnikrout/omnicalc");
     println!("High-Performance Scientific CLI Calculator & Computer Algebra System\n");
     println!("=== Origin & Vision ===");
     println!("  Conceived and founded by Sagnik Rout (https://github.com/sagnikrout)");

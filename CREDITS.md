@@ -1,18 +1,18 @@
 # Credits, Vision & Acknowledgments
 
-**Project:** `cal` / `omnicalc`  
-**Repository:** [https://github.com/sagnikrout/cal](https://github.com/sagnikrout/cal)  
+**Project:** `omnicalc`  
+**Repository:** [https://github.com/sagnikrout/omnicalc](https://github.com/sagnikrout/omnicalc)  
 **Version:** CalVer `2026.11.18`  
 
 ---
 
 ## 1. The Vision & Origin
 
-`cal` was conceived years ago by **Sagnik Rout** ([@sagnikrout](https://github.com/sagnikrout)).
+`omnicalc` was conceived years ago by **Sagnik Rout** ([@sagnikrout](https://github.com/sagnikrout)).
 
 It started with a persistent ambition and relentless optimism: to build the definitive command-line scientific calculator. Most existing tools forced an uncomfortable tradeoff: either instant startup with limited math, or full computer algebra with multi-megabyte C++ dependencies and 50ms startup latency. 
 
-Sagnik envisioned a unified engine that provides both: sub-millisecond execution, exact arbitrary precision, dimensional physics, and robust computer algebra, without compromise. The initial dream took root at [https://github.com/sagnikrout/cal](https://github.com/sagnikrout/cal) and culminated in this production engine.
+Sagnik envisioned a unified engine that provides both: sub-millisecond execution, exact arbitrary precision, dimensional physics, and robust computer algebra, without compromise. The initial dream took root at [https://github.com/sagnikrout/omnicalc](https://github.com/sagnikrout/omnicalc) and culminated in this production engine.
 
 ---
 

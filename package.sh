@@ -82,7 +82,7 @@ Maintainer: Sagnik Rout <https://github.com/sagnikrout>
 Installed-Size: $INSTALLED_SIZE
 Section: math
 Priority: optional
-Homepage: https://github.com/sagnikrout/cal
+Homepage: https://github.com/sagnikrout/omnicalc
 Description: High-performance scientific CLI calculator and CAS engine
  A lightweight, zero-allocation scientific calculator featuring physical
  unit conversions, Gaussian uncertainty propagation, complex numbers,
