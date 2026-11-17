@@ -83,6 +83,12 @@ impl UnitRegistry {
         self.add_unit("degC", "celsius", Dimension::TEMPERATURE, 1.0, 273.15);
         self.add_unit("degF", "fahrenheit", Dimension::TEMPERATURE, 5.0 / 9.0, 459.67);
 
+        // Angle (Dimensionless)
+        self.add_unit("rad", "radian", Dimension::DIMENSIONLESS, 1.0, 0.0);
+        self.add_unit("rads", "radians", Dimension::DIMENSIONLESS, 1.0, 0.0);
+        self.add_unit("deg", "degree", Dimension::DIMENSIONLESS, std::f64::consts::PI / 180.0, 0.0);
+        self.add_unit("degrees", "degrees", Dimension::DIMENSIONLESS, std::f64::consts::PI / 180.0, 0.0);
+
         // Frequency
         self.add_unit("Hz", "hertz", Dimension::FREQUENCY, 1.0, 0.0);
         self.add_unit("kHz", "kilohertz", Dimension::FREQUENCY, 1e3, 0.0);
@@ -114,7 +120,7 @@ impl UnitRegistry {
         self.add_unit("W", "watt", Dimension::POWER, 1.0, 0.0);
         self.add_unit("kW", "kilowatt", Dimension::POWER, 1000.0, 0.0);
         self.add_unit("MW", "megawatt", Dimension::POWER, 1e6, 0.0);
-        self.add_unit("hp", "horsepower", Dimension::POWER, 745.69987158227022, 0.0);
+        self.add_unit("hp", "horsepower", Dimension::POWER, 745.699_871_582_270_2, 0.0);
 
         // Pressure
         self.add_unit("Pa", "pascal", Dimension::PRESSURE, 1.0, 0.0);
@@ -209,8 +215,8 @@ impl UnitRegistry {
         if let Some(slash_idx) = clean.find('/') {
             let num_part = &clean[..slash_idx];
             let den_part = &clean[slash_idx + 1..];
-            if let (Some(num_def), Some(den_def)) = (self.lookup(num_part), self.lookup(den_part)) {
-                if num_def.offset == 0.0 && den_def.offset == 0.0 {
+            if let (Some(num_def), Some(den_def)) = (self.lookup(num_part), self.lookup(den_part))
+                && num_def.offset == 0.0 && den_def.offset == 0.0 {
                     return Some(UnitDefinition {
                         symbol: clean.to_string(),
                         name: clean.to_string(),
@@ -219,16 +225,15 @@ impl UnitRegistry {
                         offset: 0.0,
                     });
                 }
-            }
         }
 
         // Check for compound power units: e.g. m^2, s^3
         if let Some(caret_idx) = clean.find('^') {
             let base_part = &clean[..caret_idx];
             let exp_part = &clean[caret_idx + 1..];
-            if let Ok(exp) = exp_part.parse::<i8>() {
-                if let Some(base_def) = self.lookup(base_part) {
-                    if base_def.offset == 0.0 {
+            if let Ok(exp) = exp_part.parse::<i8>()
+                && let Some(base_def) = self.lookup(base_part)
+                    && base_def.offset == 0.0 {
                         return Some(UnitDefinition {
                             symbol: clean.to_string(),
                             name: clean.to_string(),
@@ -237,16 +242,14 @@ impl UnitRegistry {
                             offset: 0.0,
                         });
                     }
-                }
-            }
         }
 
         // Check for compound product units: e.g. kg*m, N*s
         if let Some(star_idx) = clean.find('*') {
             let p1 = &clean[..star_idx];
             let p2 = &clean[star_idx + 1..];
-            if let (Some(d1), Some(d2)) = (self.lookup(p1), self.lookup(p2)) {
-                if d1.offset == 0.0 && d2.offset == 0.0 {
+            if let (Some(d1), Some(d2)) = (self.lookup(p1), self.lookup(p2))
+                && d1.offset == 0.0 && d2.offset == 0.0 {
                     return Some(UnitDefinition {
                         symbol: clean.to_string(),
                         name: clean.to_string(),
@@ -255,7 +258,6 @@ impl UnitRegistry {
                         offset: 0.0,
                     });
                 }
-            }
         }
 
         // Try standard metric prefixes on base units
@@ -275,8 +277,8 @@ impl UnitRegistry {
         for (pfx, mult) in prefixes {
             if clean.starts_with(pfx) && clean.len() > pfx.len() {
                 let remainder = &clean[pfx.len()..];
-                if let Some(base_def) = self.units.get(remainder) {
-                    if base_def.offset == 0.0 {
+                if let Some(base_def) = self.units.get(remainder)
+                    && base_def.offset == 0.0 {
                         return Some(UnitDefinition {
                             symbol: clean.to_string(),
                             name: format!("{}{}", pfx, base_def.name),
@@ -285,7 +287,6 @@ impl UnitRegistry {
                             offset: 0.0,
                         });
                     }
-                }
             }
         }
 
@@ -312,5 +313,11 @@ impl UnitRegistry {
         // Target value = (base_value / to.scale) - to.offset
         let target_value = (base_value / to.scale) - to.offset;
         Ok(target_value)
+    }
+}
+
+impl Default for UnitRegistry {
+    fn default() -> Self {
+        Self::new()
     }
 }

@@ -18,6 +18,24 @@ impl NumericValue {
         Self::Exact(BigRational::from_integer(BigInt::from(n)))
     }
 
+    pub fn from_bigint(b: BigInt) -> Self {
+        Self::Exact(BigRational::from_integer(b))
+    }
+
+    pub fn to_bigint(&self) -> Option<BigInt> {
+        match self {
+            Self::Exact(r) => {
+                if r.is_integer() {
+                    Some(r.to_integer())
+                } else {
+                    r.to_f64().map(|f| BigInt::from(f as i64))
+                }
+            }
+            Self::Float(f) => Some(BigInt::from(*f as i64)),
+            _ => None,
+        }
+    }
+
     pub fn from_f64(f: f64) -> Self {
         Self::Float(f)
     }
@@ -151,6 +169,29 @@ impl NumericValue {
         }
     }
 
+    pub fn cbrt(&self) -> Self {
+        match self {
+            Self::Exact(r) => {
+                let f = r.to_f64().unwrap_or(0.0).cbrt();
+                if (f.round().powi(3) - r.to_f64().unwrap_or(0.0)).abs() < 1e-10 {
+                    Self::from_i64(f.round() as i64)
+                } else {
+                    Self::Float(f)
+                }
+            }
+            Self::Float(f) => Self::Float(f.cbrt()),
+            Self::Uncertainty { nominal, error } => {
+                let nom = nominal.cbrt();
+                let err = (error / (3.0 * nom.powi(2))).abs();
+                Self::Uncertainty {
+                    nominal: nom,
+                    error: err,
+                }
+            }
+            Self::Complex(c) => Self::Complex(c.powf(1.0 / 3.0)),
+        }
+    }
+
     pub fn sin(&self) -> Self {
         match self {
             Self::Complex(c) => Self::Complex(c.sin()),
@@ -207,6 +248,28 @@ impl NumericValue {
                     Self::Complex(Complex64::new(f, 0.0).ln() / std::f64::consts::LN_10)
                 } else {
                     Self::Float(f.log10())
+                }
+            }
+        }
+    }
+
+    pub fn log2(&self) -> Self {
+        match self {
+            Self::Exact(r) if r.is_positive() => {
+                let f = r.to_f64().unwrap_or(0.0).log2();
+                if (f.round() - f).abs() < 1e-10 {
+                    Self::from_i64(f.round() as i64)
+                } else {
+                    Self::Float(f)
+                }
+            }
+            Self::Complex(c) => Self::Complex(c.ln() / std::f64::consts::LN_2),
+            _ => {
+                let f = self.to_f64();
+                if f < 0.0 {
+                    Self::Complex(Complex64::new(f, 0.0).ln() / std::f64::consts::LN_2)
+                } else {
+                    Self::Float(f.log2())
                 }
             }
         }

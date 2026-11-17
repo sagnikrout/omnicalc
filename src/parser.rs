@@ -357,6 +357,7 @@ impl Parser {
                 match name.as_str() {
                     "pi" => Ok(Expr::Number(NumericValue::from_f64(std::f64::consts::PI))),
                     "tau" => Ok(Expr::Number(NumericValue::from_f64(std::f64::consts::TAU))),
+                    "phi" => Ok(Expr::Number(NumericValue::from_f64((1.0 + 5.0f64.sqrt()) / 2.0))),
                     "e" => Ok(Expr::Number(NumericValue::from_f64(std::f64::consts::E))),
                     "c" => {
                         // Speed of light in vacuum = 299792458 m/s

@@ -145,6 +145,27 @@ pub fn diff(expr: &Expr, var: &str) -> Expr {
                     let d = Expr::Binary(Box::new(du), BinaryOp::Div, Box::new(u.clone()));
                     simplify(&d)
                 }
+                "asin" => {
+                    let u_sq = Expr::Binary(Box::new(u.clone()), BinaryOp::Pow, Box::new(Expr::Number(NumericValue::from_i64(2))));
+                    let one_minus = Expr::Binary(Box::new(Expr::Number(NumericValue::from_i64(1))), BinaryOp::Sub, Box::new(u_sq));
+                    let denom = Expr::Call("sqrt".to_string(), vec![one_minus]);
+                    let d = Expr::Binary(Box::new(du), BinaryOp::Div, Box::new(denom));
+                    simplify(&d)
+                }
+                "acos" => {
+                    let u_sq = Expr::Binary(Box::new(u.clone()), BinaryOp::Pow, Box::new(Expr::Number(NumericValue::from_i64(2))));
+                    let one_minus = Expr::Binary(Box::new(Expr::Number(NumericValue::from_i64(1))), BinaryOp::Sub, Box::new(u_sq));
+                    let denom = Expr::Call("sqrt".to_string(), vec![one_minus]);
+                    let neg_du = Expr::Unary(UnaryOp::Neg, Box::new(du));
+                    let d = Expr::Binary(Box::new(neg_du), BinaryOp::Div, Box::new(denom));
+                    simplify(&d)
+                }
+                "atan" => {
+                    let u_sq = Expr::Binary(Box::new(u.clone()), BinaryOp::Pow, Box::new(Expr::Number(NumericValue::from_i64(2))));
+                    let one_plus = Expr::Binary(Box::new(Expr::Number(NumericValue::from_i64(1))), BinaryOp::Add, Box::new(u_sq));
+                    let d = Expr::Binary(Box::new(du), BinaryOp::Div, Box::new(one_plus));
+                    simplify(&d)
+                }
                 _ => Expr::Call(format!("diff_{}", name), vec![u.clone(), du]),
             }
         }
@@ -235,11 +256,10 @@ pub fn format_symbolic(expr: &Expr) -> String {
         Expr::Unary(UnaryOp::Neg, inner) => format!("-{}", format_symbolic(inner)),
         Expr::Binary(lhs, BinaryOp::Mul, rhs) => {
             // Check for concise coefficient format e.g. 12x
-            if let Expr::Number(n) = &**lhs {
-                if let Expr::Variable(v) | Expr::Unit(v) = &**rhs {
+            if let Expr::Number(n) = &**lhs
+                && let Expr::Variable(v) | Expr::Unit(v) = &**rhs {
                     return format!("{}{}", n, v);
                 }
-            }
             format!("{} * {}", format_symbolic(lhs), format_symbolic(rhs))
         }
         Expr::Binary(lhs, op, rhs) => {
@@ -377,9 +397,9 @@ pub fn factor_polynomial(expr: &Expr, var: &str) -> String {
             let mut factors: Vec<(u64, u32)> = Vec::new();
             let mut d = 2;
             while d * d <= num {
-                if num % d == 0 {
+                if num.is_multiple_of(d) {
                     let mut count = 0;
-                    while num % d == 0 {
+                    while num.is_multiple_of(d) {
                         count += 1;
                         num /= d;
                     }

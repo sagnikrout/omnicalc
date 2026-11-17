@@ -4,11 +4,19 @@ use crate::numeric::NumericValue;
 use crate::quantity::Quantity;
 use crate::symbolic;
 use crate::units::UnitRegistry;
+use num_bigint::BigInt;
+use num_traits::{One, Signed, Zero};
 use std::collections::HashMap;
 
 pub struct Evaluator {
     pub registry: UnitRegistry,
     pub variables: HashMap<String, Quantity>,
+}
+
+impl Default for Evaluator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Evaluator {
@@ -74,11 +82,10 @@ impl Evaluator {
                 }
 
                 let q = self.eval_quantity(expr)?;
-                if let Some(ref u) = q.unit_str {
-                    if let Ok(converted) = q.to_unit(u, &self.registry) {
+                if let Some(ref u) = q.unit_str
+                    && let Ok(converted) = q.to_unit(u, &self.registry) {
                         return Ok(converted.format_plain());
                     }
-                }
                 Ok(q.format_with_registry(&self.registry))
             }
         }
@@ -149,27 +156,25 @@ impl Evaluator {
             }
             Expr::Unary(UnaryOp::Not, inner) => {
                 let q = self.eval_quantity(inner)?;
-                let int_val = q.value.to_f64() as i64;
-                Ok(Quantity::dimensionless(NumericValue::from_i64(!int_val)))
+                let bi = q.value.to_bigint().unwrap_or_else(|| BigInt::from(q.value.to_f64() as i64));
+                Ok(Quantity::dimensionless(NumericValue::from_bigint(!bi)))
             }
             Expr::Binary(lhs, op, rhs) => {
                 if *op == BinaryOp::Mul {
-                    if let Expr::Unit(name) = &**rhs {
-                        if let Some(_def) = self.registry.lookup(name) {
+                    if let Expr::Unit(name) = &**rhs
+                        && let Some(_def) = self.registry.lookup(name) {
                             let q_lhs = self.eval_quantity(lhs)?;
                             if q_lhs.dimension.is_dimensionless() {
                                 return Quantity::from_unit(q_lhs.value, name, &self.registry);
                             }
                         }
-                    }
-                    if let Expr::Unit(name) = &**lhs {
-                        if let Some(_def) = self.registry.lookup(name) {
+                    if let Expr::Unit(name) = &**lhs
+                        && let Some(_def) = self.registry.lookup(name) {
                             let q_rhs = self.eval_quantity(rhs)?;
                             if q_rhs.dimension.is_dimensionless() {
                                 return Quantity::from_unit(q_rhs.value, name, &self.registry);
                             }
                         }
-                    }
                 }
 
                 let q_lhs = self.eval_quantity(lhs)?;
@@ -212,22 +217,22 @@ impl Evaluator {
                         })
                     }
                     BinaryOp::BitAnd => {
-                        let a = q_lhs.value.to_f64() as i64;
-                        let b = q_rhs.value.to_f64() as i64;
-                        Ok(Quantity::dimensionless(NumericValue::from_i64(a & b)))
+                        let a = q_lhs.value.to_bigint().unwrap_or_else(|| BigInt::from(q_lhs.value.to_f64() as i64));
+                        let b = q_rhs.value.to_bigint().unwrap_or_else(|| BigInt::from(q_rhs.value.to_f64() as i64));
+                        Ok(Quantity::dimensionless(NumericValue::from_bigint(a & b)))
                     }
                     BinaryOp::BitOr => {
-                        let a = q_lhs.value.to_f64() as i64;
-                        let b = q_rhs.value.to_f64() as i64;
-                        Ok(Quantity::dimensionless(NumericValue::from_i64(a | b)))
+                        let a = q_lhs.value.to_bigint().unwrap_or_else(|| BigInt::from(q_lhs.value.to_f64() as i64));
+                        let b = q_rhs.value.to_bigint().unwrap_or_else(|| BigInt::from(q_rhs.value.to_f64() as i64));
+                        Ok(Quantity::dimensionless(NumericValue::from_bigint(a | b)))
                     }
                     BinaryOp::BitXor => {
-                        let a = q_lhs.value.to_f64() as i64;
-                        let b = q_rhs.value.to_f64() as i64;
-                        Ok(Quantity::dimensionless(NumericValue::from_i64(a ^ b)))
+                        let a = q_lhs.value.to_bigint().unwrap_or_else(|| BigInt::from(q_lhs.value.to_f64() as i64));
+                        let b = q_rhs.value.to_bigint().unwrap_or_else(|| BigInt::from(q_rhs.value.to_f64() as i64));
+                        Ok(Quantity::dimensionless(NumericValue::from_bigint(a ^ b)))
                     }
                     BinaryOp::Shl => {
-                        let a = q_lhs.value.to_f64() as i64;
+                        let a = q_lhs.value.to_bigint().unwrap_or_else(|| BigInt::from(q_lhs.value.to_f64() as i64));
                         let shift_f = q_rhs.value.to_f64();
                         if shift_f < 0.0 {
                             return Err(format!("Negative shift amount {} is invalid", shift_f));
@@ -235,11 +240,11 @@ impl Evaluator {
                         if shift_f >= 64.0 {
                             return Err(format!("Bit shift overflow: shift amount {} exceeds maximum 63", shift_f as u64));
                         }
-                        let b = shift_f as u32;
-                        Ok(Quantity::dimensionless(NumericValue::from_i64(a << b)))
+                        let b = shift_f as usize;
+                        Ok(Quantity::dimensionless(NumericValue::from_bigint(a << b)))
                     }
                     BinaryOp::Shr => {
-                        let a = q_lhs.value.to_f64() as i64;
+                        let a = q_lhs.value.to_bigint().unwrap_or_else(|| BigInt::from(q_lhs.value.to_f64() as i64));
                         let shift_f = q_rhs.value.to_f64();
                         if shift_f < 0.0 {
                             return Err(format!("Negative shift amount {} is invalid", shift_f));
@@ -247,8 +252,8 @@ impl Evaluator {
                         if shift_f >= 64.0 {
                             return Err(format!("Bit shift overflow: shift amount {} exceeds maximum 63", shift_f as u64));
                         }
-                        let b = shift_f as u32;
-                        Ok(Quantity::dimensionless(NumericValue::from_i64(a >> b)))
+                        let b = shift_f as usize;
+                        Ok(Quantity::dimensionless(NumericValue::from_bigint(a >> b)))
                     }
                 }
             }
@@ -276,40 +281,47 @@ impl Evaluator {
 
         match name {
             "sqrt" => {
-                let d = &first.dimension;
-                if d.length % 2 != 0
-                    || d.mass % 2 != 0
-                    || d.time % 2 != 0
-                    || d.current % 2 != 0
-                    || d.temperature % 2 != 0
-                    || d.amount % 2 != 0
-                    || d.luminosity % 2 != 0
-                    || d.digital % 2 != 0
-                    || d.currency % 2 != 0
-                {
+                if !first.dimension.is_divisible_by(2) {
                     return Err(format!(
                         "Dimensional error: square root of dimension [{}] is not divisible by 2",
-                        d
+                        first.dimension
                     ));
                 }
-                let new_dim = Dimension {
-                    length: first.dimension.length / 2,
-                    mass: first.dimension.mass / 2,
-                    time: first.dimension.time / 2,
-                    current: first.dimension.current / 2,
-                    temperature: first.dimension.temperature / 2,
-                    amount: first.dimension.amount / 2,
-                    luminosity: first.dimension.luminosity / 2,
-                    digital: first.dimension.digital / 2,
-                    currency: first.dimension.currency / 2,
+                let new_dim = first.dimension.div_scalar(2);
+                let unit_str = if first.dimension.is_dimensionless() {
+                    first.unit_str.clone()
+                } else if new_dim == Dimension::LENGTH && first.unit_str.as_deref() == Some("m^2") {
+                    Some("m".to_string())
+                } else {
+                    None
                 };
                 Ok(Quantity {
                     value: first.value.sqrt(),
                     dimension: new_dim,
-                    unit_str: None,
+                    unit_str,
                 })
             }
-            "cbrt" => Ok(Quantity::dimensionless(NumericValue::from_f64(first.value.to_f64().cbrt()))),
+            "cbrt" => {
+                if !first.dimension.is_divisible_by(3) {
+                    return Err(format!(
+                        "Dimensional error: cube root of dimension [{}] is not divisible by 3",
+                        first.dimension
+                    ));
+                }
+                let new_dim = first.dimension.div_scalar(3);
+                let unit_str = if first.dimension.is_dimensionless() {
+                    first.unit_str.clone()
+                } else if new_dim == Dimension::LENGTH && first.unit_str.as_deref() == Some("m^3") {
+                    Some("m".to_string())
+                } else {
+                    None
+                };
+                Ok(Quantity {
+                    value: first.value.cbrt(),
+                    dimension: new_dim,
+                    unit_str,
+                })
+            }
             "sin" => Ok(Quantity::dimensionless(first.value.sin())),
             "cos" => Ok(Quantity::dimensionless(first.value.cos())),
             "tan" => Ok(Quantity::dimensionless(first.value.tan())),
@@ -331,11 +343,50 @@ impl Evaluator {
             "exp" => Ok(Quantity::dimensionless(first.value.exp())),
             "ln" => Ok(Quantity::dimensionless(first.value.ln())),
             "log" | "log10" => Ok(Quantity::dimensionless(first.value.log10())),
+            "log2" => Ok(Quantity::dimensionless(first.value.log2())),
             "abs" => Ok(Quantity {
                 value: first.value.abs(),
                 dimension: first.dimension,
                 unit_str: first.unit_str.clone(),
             }),
+            "fact" | "factorial" => {
+                let n_f = first.value.to_f64();
+                if n_f < 0.0 || n_f.fract() != 0.0 || n_f > 1000.0 {
+                    return Err("Factorial requires non-negative integer <= 1000".to_string());
+                }
+                let mut res = BigInt::one();
+                let n = n_f as u64;
+                for i in 2..=n {
+                    res *= BigInt::from(i);
+                }
+                Ok(Quantity::dimensionless(NumericValue::from_bigint(res)))
+            }
+            "gcd" => {
+                if evaluated_args.len() < 2 {
+                    return Err("gcd requires at least 2 arguments".to_string());
+                }
+                let mut res = evaluated_args[0].value.to_bigint()
+                    .unwrap_or_else(|| BigInt::from(evaluated_args[0].value.to_f64() as i64));
+                for arg in &evaluated_args[1..] {
+                    let b = arg.value.to_bigint()
+                        .unwrap_or_else(|| BigInt::from(arg.value.to_f64() as i64));
+                    res = gcd_bigint(res, b);
+                }
+                Ok(Quantity::dimensionless(NumericValue::from_bigint(res)))
+            }
+            "lcm" => {
+                if evaluated_args.len() < 2 {
+                    return Err("lcm requires at least 2 arguments".to_string());
+                }
+                let mut res = evaluated_args[0].value.to_bigint()
+                    .unwrap_or_else(|| BigInt::from(evaluated_args[0].value.to_f64() as i64));
+                for arg in &evaluated_args[1..] {
+                    let b = arg.value.to_bigint()
+                        .unwrap_or_else(|| BigInt::from(arg.value.to_f64() as i64));
+                    res = lcm_bigint(res, b);
+                }
+                Ok(Quantity::dimensionless(NumericValue::from_bigint(res)))
+            }
             "normdist" => {
                 // normdist(x, mean, std) or standard normdist(x)
                 let x = first.value.to_f64();
@@ -353,15 +404,27 @@ impl Evaluator {
             }
             "round" => {
                 let v = first.value.to_f64().round();
-                Ok(Quantity::dimensionless(NumericValue::from_f64(v)))
+                Ok(Quantity {
+                    value: NumericValue::from_f64(v),
+                    dimension: first.dimension,
+                    unit_str: first.unit_str.clone(),
+                })
             }
             "floor" => {
                 let v = first.value.to_f64().floor();
-                Ok(Quantity::dimensionless(NumericValue::from_f64(v)))
+                Ok(Quantity {
+                    value: NumericValue::from_f64(v),
+                    dimension: first.dimension,
+                    unit_str: first.unit_str.clone(),
+                })
             }
             "ceil" => {
                 let v = first.value.to_f64().ceil();
-                Ok(Quantity::dimensionless(NumericValue::from_f64(v)))
+                Ok(Quantity {
+                    value: NumericValue::from_f64(v),
+                    dimension: first.dimension,
+                    unit_str: first.unit_str.clone(),
+                })
             }
             _ => Err(format!("Unknown function: '{}'", name)),
         }
@@ -434,4 +497,22 @@ fn erf(x: f64) -> f64 {
     let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-x_abs * x_abs).exp();
 
     sign * y
+}
+
+fn gcd_bigint(mut a: BigInt, mut b: BigInt) -> BigInt {
+    while !b.is_zero() {
+        let t = b.clone();
+        b = a % b;
+        a = t;
+    }
+    a.abs()
+}
+
+fn lcm_bigint(a: BigInt, b: BigInt) -> BigInt {
+    if a.is_zero() || b.is_zero() {
+        BigInt::zero()
+    } else {
+        let g = gcd_bigint(a.clone(), b.clone());
+        ((a / g) * b).abs()
+    }
 }

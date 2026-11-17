@@ -88,8 +88,8 @@ impl Quantity {
 
     pub fn format_with_registry(&self, registry: &UnitRegistry) -> String {
         if let Some(ref u) = self.unit_str {
-            if let Some(def) = registry.lookup(u) {
-                if def.offset != 0.0 || (def.scale != 1.0 && def.scale > 0.0) {
+            if let Some(def) = registry.lookup(u)
+                && (def.offset != 0.0 || (def.scale != 1.0 && def.scale > 0.0)) {
                     let base_f = self.value.to_f64();
                     let display_f = (base_f / def.scale) - def.offset;
                     let display_val = match &self.value {
@@ -97,17 +97,10 @@ impl Quantity {
                             nominal: display_f,
                             error: error / def.scale,
                         },
-                        _ => {
-                            if display_f.fract() == 0.0 && display_f.abs() < 1e15 {
-                                NumericValue::from_f64(display_f)
-                            } else {
-                                NumericValue::from_f64(display_f)
-                            }
-                        }
+                        _ => NumericValue::from_f64(display_f),
                     };
                     return format!("{} {}", display_val, u);
                 }
-            }
             format!("{} {}", self.value, u)
         } else if self.dimension.is_dimensionless() {
             format!("{}", self.value)
@@ -148,7 +141,7 @@ impl Quantity {
     }
 
     pub fn format_raw(&self) -> String {
-        format!("{}", self.value.format_with_base(10, true))
+        self.value.format_with_base(10, true).to_string()
     }
 }
 

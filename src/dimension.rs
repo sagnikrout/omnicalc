@@ -70,6 +70,32 @@ impl Dimension {
             currency: self.currency * power,
         }
     }
+
+    pub fn is_divisible_by(&self, n: i8) -> bool {
+        self.length % n == 0
+            && self.mass % n == 0
+            && self.time % n == 0
+            && self.current % n == 0
+            && self.temperature % n == 0
+            && self.amount % n == 0
+            && self.luminosity % n == 0
+            && self.digital % n == 0
+            && self.currency % n == 0
+    }
+
+    pub fn div_scalar(&self, n: i8) -> Self {
+        Self {
+            length: self.length / n,
+            mass: self.mass / n,
+            time: self.time / n,
+            current: self.current / n,
+            temperature: self.temperature / n,
+            amount: self.amount / n,
+            luminosity: self.luminosity / n,
+            digital: self.digital / n,
+            currency: self.currency / n,
+        }
+    }
 }
 
 impl Add for Dimension {
@@ -106,6 +132,7 @@ impl Sub for Dimension {
     }
 }
 
+#[allow(clippy::suspicious_arithmetic_impl)]
 impl Mul for Dimension {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self {
@@ -113,6 +140,7 @@ impl Mul for Dimension {
     }
 }
 
+#[allow(clippy::suspicious_arithmetic_impl)]
 impl Div for Dimension {
     type Output = Self;
     fn div(self, rhs: Self) -> Self {

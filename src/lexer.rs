@@ -80,6 +80,21 @@ impl<'a> Lexer<'a> {
                 continue;
             }
 
+            // Check for ° (degree symbol: °, °C, °F)
+            if ch == '°' {
+                self.advance();
+                if self.peek() == Some('C') {
+                    self.advance();
+                    tokens.push(Token::Ident("degC".to_string()));
+                } else if self.peek() == Some('F') {
+                    self.advance();
+                    tokens.push(Token::Ident("degF".to_string()));
+                } else {
+                    tokens.push(Token::Ident("deg".to_string()));
+                }
+                continue;
+            }
+
             // Check for +/-
             if ch == '+' && self.peek_next() == Some('/') {
                 self.advance(); // '+'
@@ -134,7 +149,7 @@ impl<'a> Lexer<'a> {
             }
 
             // Feet-inches notation and numbers (including leading decimal like .5)
-            if ch.is_ascii_digit() || (ch == '.' && self.peek_next().map_or(false, |n| n.is_ascii_digit())) {
+            if ch.is_ascii_digit() || (ch == '.' && self.peek_next().is_some_and(|n| n.is_ascii_digit())) {
                 // Peek ahead to see if it's feet-inches format like 5'10", 5', 10"
                 if let Some(token) = self.try_lex_feet_inches() {
                     tokens.push(token);
@@ -215,7 +230,7 @@ impl<'a> Lexer<'a> {
                         let is_valid_exp = match self.peek_next() {
                             Some(d) if d.is_ascii_digit() => true,
                             Some('+' | '-') => {
-                                self.chars.get(self.pos + 2).map_or(false, |d| d.is_ascii_digit())
+                                self.chars.get(self.pos + 2).is_some_and(|d| d.is_ascii_digit())
                             }
                             _ => false,
                         };
@@ -223,12 +238,11 @@ impl<'a> Lexer<'a> {
                             seen_exp = true;
                             num_str.push(c);
                             self.advance();
-                            if let Some(next_c) = self.peek() {
-                                if next_c == '+' || next_c == '-' {
+                            if let Some(next_c) = self.peek()
+                                && (next_c == '+' || next_c == '-') {
                                     num_str.push(next_c);
                                     self.advance();
                                 }
-                            }
                         } else {
                             break;
                         }
