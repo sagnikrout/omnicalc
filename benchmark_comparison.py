@@ -1,104 +1,108 @@
 #!/usr/bin/env python3
+"""Compare calculator startup/evaluation latency for locally installed tools.
+
+Override executable locations with OMNICALC_BIN, QALC_BIN, NUMBAT_BIN, and
+FEND_BIN. Missing calculators are skipped rather than reported as zero-size,
+zero-latency successes.
+"""
+
+import os
+import shutil
+import statistics
 import subprocess
 import time
-import statistics
-import os
-import re
-
-CALCULATORS = {
-    "omnicalc": {
-        "bin": "/home/sagnik/bin/omnicalc",
-        "cmd": lambda expr: ["/home/sagnik/bin/omnicalc", "-e", expr],
-    },
-    "qalc": {
-        "bin": "/home/sagnik/bench_tools/bin/qalc",
-        "cmd": lambda expr: ["/home/sagnik/bench_tools/bin/qalc", "-t", expr],
-    },
-    "numbat": {
-        "bin": "/home/sagnik/bench_tools/bin/numbat",
-        "cmd": lambda expr: ["/home/sagnik/bench_tools/bin/numbat", "-e", expr.replace(" to ", " -> ")],
-    },
-    "fend": {
-        "bin": "/home/sagnik/bench_tools/bin/fend",
-        "cmd": lambda expr: ["/home/sagnik/bench_tools/bin/fend", expr],
-    },
-}
-
-WORKLOADS = [
-    ("Basic Arithmetic", "2 + 2 * 3^2"),
-    ("Transcendental Math", "exp(1) + sin(0.5) * cos(0.5)"),
-    ("Velocity Unit Conversion", "100 km/h to m/s"),
-    ("Power Unit Derivation", "100 J / 10 s"),
-]
+from pathlib import Path
 
 ITERATIONS = 50
 WARMUP = 10
+WORKLOADS = [
+    ("Basic arithmetic", "2 + 2 * 3^2"),
+    ("Transcendental math", "exp(1) + sin(0.5) * cos(0.5)"),
+    ("Velocity conversion", "100 km/h to m/s"),
+    ("Power derivation", "100 J / 10 s"),
+]
 
-def measure_rss(cmd_list):
-    time_cmd = ["/usr/bin/time", "-v"] + cmd_list
-    p = subprocess.run(time_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    for line in p.stderr.splitlines():
+
+def resolve_binary(env_name: str, fallback: str) -> str | None:
+    configured = os.environ.get(env_name)
+    if configured:
+        path = Path(configured).expanduser()
+        return str(path) if path.is_file() and os.access(path, os.X_OK) else None
+    return shutil.which(fallback)
+
+
+def calculator_specs() -> dict[str, tuple[str, callable]]:
+    specs = {}
+    entries = [
+        ("omnicalc", "OMNICALC_BIN", "omnicalc", lambda binary, expr: [binary, "-e", expr]),
+        ("qalc", "QALC_BIN", "qalc", lambda binary, expr: [binary, "-t", expr]),
+        ("numbat", "NUMBAT_BIN", "numbat", lambda binary, expr: [binary, "-e", expr.replace(" to ", " -> ")]),
+        ("fend", "FEND_BIN", "fend", lambda binary, expr: [binary, expr]),
+    ]
+    for name, env_name, fallback, command in entries:
+        binary = resolve_binary(env_name, fallback)
+        if binary:
+            specs[name] = (binary, command)
+    return specs
+
+
+def run_checked(command: list[str]) -> None:
+    subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+
+
+def measure_rss_kb(command: list[str]) -> int | None:
+    """Return peak child RSS when GNU time is available; otherwise omit it."""
+    time_bin = "/usr/bin/time"
+    if not os.path.isfile(time_bin):
+        return None
+    result = subprocess.run(
+        [time_bin, "-v", *command], capture_output=True, text=True, check=False
+    )
+    if result.returncode != 0:
+        return None
+    for line in result.stderr.splitlines():
         if "Maximum resident set size" in line:
-            parts = line.split(":")
-            return int(parts[1].strip())
-    return 0
+            try:
+                return int(line.split(":", 1)[1].strip())
+            except (IndexError, ValueError):
+                return None
+    return None
 
-def run_benchmarks():
-    print("=" * 80)
-    print("Cross-Calculator Execution Benchmark: omnicalc vs qalc vs numbat vs fend")
-    print(f"Sampling: {WARMUP} warmups, {ITERATIONS} timed iterations per workload")
-    print("=" * 80)
 
-    # 1. Binary Sizes
-    bin_sizes = {}
-    for name, spec in CALCULATORS.items():
-        bin_path = spec["bin"]
-        if os.path.exists(bin_path):
-            size_bytes = os.path.getsize(bin_path)
-            bin_sizes[name] = size_bytes / (1024 * 1024)
-        else:
-            bin_sizes[name] = 0.0
+def run_benchmarks() -> None:
+    specs = calculator_specs()
+    if not specs:
+        raise SystemExit("No calculator executables found on PATH or via *_BIN variables.")
 
-    results = {}
+    print("Calculator startup/evaluation benchmark")
+    print(f"Sampling: {WARMUP} warmups, {ITERATIONS} timed runs per workload")
+    print("Note: timings include process startup and are machine/load dependent.")
 
-    for w_name, expr in WORKLOADS:
-        print(f"\n--- Benchmark Workload: {w_name} ('{expr}') ---")
-        results[w_name] = {}
+    for workload, expression in WORKLOADS:
+        print(f"\n--- {workload}: {expression} ---")
+        for name, (binary, make_command) in specs.items():
+            command = make_command(binary, expression)
+            try:
+                for _ in range(WARMUP):
+                    run_checked(command)
+                durations = []
+                for _ in range(ITERATIONS):
+                    start = time.perf_counter_ns()
+                    run_checked(command)
+                    durations.append((time.perf_counter_ns() - start) / 1_000_000)
+            except (OSError, subprocess.CalledProcessError) as error:
+                print(f"[{name:8s}] skipped: command failed ({error})")
+                continue
 
-        for calc_name, spec in CALCULATORS.items():
-            cmd = spec["cmd"](expr)
+            ordered = sorted(durations)
+            p95 = ordered[min(len(ordered) - 1, int(0.95 * len(ordered)))]
+            rss = measure_rss_kb(command)
+            rss_text = f"{rss:6d} KB" if rss is not None else "unavailable"
+            print(
+                f"[{name:8s}] median {statistics.median(durations):6.2f} ms | "
+                f"p95 {p95:6.2f} ms | RSS {rss_text}"
+            )
 
-            # Warmup
-            for _ in range(WARMUP):
-                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-            # Timed runs
-            durations = []
-            for _ in range(ITERATIONS):
-                t0 = time.perf_counter_ns()
-                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                t1 = time.perf_counter_ns()
-                durations.append((t1 - t0) / 1_000_000.0) # convert to ms
-
-            mean_ms = statistics.mean(durations)
-            median_ms = statistics.median(durations)
-            p95_ms = sorted(durations)[int(0.95 * len(durations))]
-            min_ms = min(durations)
-            max_ms = max(durations)
-            rss_kb = measure_rss(cmd)
-
-            results[w_name][calc_name] = {
-                "mean_ms": mean_ms,
-                "median_ms": median_ms,
-                "p95_ms": p95_ms,
-                "min_ms": min_ms,
-                "max_ms": max_ms,
-                "rss_kb": rss_kb,
-            }
-
-            print(f"[{calc_name:8s}] Mean: {mean_ms:5.2f} ms | Median: {median_ms:5.2f} ms | p95: {p95_ms:5.2f} ms | RSS: {rss_kb:6d} KB")
-
-    return bin_sizes, results
 
 if __name__ == "__main__":
-    bin_sizes, results = run_benchmarks()
+    run_benchmarks()
