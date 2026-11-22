@@ -37,6 +37,20 @@ Every milestone must maintain these performance and safety thresholds:
 
 ---
 
+### Milestone 1.5: Evaluator Correctness, Hardening & Microlithic Architecture (Complete — Commits `99f0651`, `9a0b10d`, `a35075e`)
+* [x] **Evaluator/API arity and dimension validation**: Strict arity and dimensionless guards on all 18 math functions; empty argument validation on `diff()` and `factor()`; unconditional scope save/restore in `eval_integral`.
+* [x] **Integer and exponent safety**: Implemented `to_exact_bigint(&self)` to reject non-integers; bitwise ops require dimensionless integers; dimensional powers reject non-integers and 8-bit overflow; 100k exponent cap enforced.
+* [x] **Temperature and uncertainty semantics**: Affine temperature addition (`degC + degC`) rejected; subtraction yields Kelvin differences (`20 degC - 10 degC = 10 K`); delta additions (`20 degC + 5 K = 25 degC`) preserve affine scale; Gaussian quadrature error propagation.
+* [x] **Equation-solving degeneracy and root robustness**: Disambiguates $0=0$ (`Identity`) from $0=5$ (`Contradiction`); dynamic variable auto-detection (`2y + 4 = 10` -> `y = 3`); root solver propagates errors via `Result<f64, String>`.
+* [x] **Lexer/parser malformed-input handling**: Lexer rejects empty radix literals (`0x`, `0b`, `0o`); parser enforces `MAX_DEPTH = 512` recursion limit.
+* [x] **Unit/currency documentation and tests**: Prominently documented offline baseline currency exchange rates (November 2026); added tests for base, derived, and compound units.
+* [x] **Portable destructive-test and CI setup**: Dynamic binary resolution in `destructive_test.sh`; added GitHub Actions CI pipeline (`.github/workflows/ci.yml`).
+* [x] **Accurate benchmark/test claims**: Derived test counts directly from execution; aligned README badge with the 450/450 test suite.
+* [x] **Rust formatting, tests, clippy, shell/Python checks, and verification commits**: `cargo fmt` clean; `cargo clippy --all-targets -- -D warnings` 0 warnings; 21/21 cargo tests pass; 450/450 destructive tests pass; clean script syntax checks.
+* [x] **Microlithic modular source architecture**: Decomposed monolithic files (`eval.rs`, `symbolic.rs`, `numeric.rs`) into clean submodules under `src/eval/`, `src/symbolic/`, and `src/numeric/`, with all files strictly under 283 lines.
+
+---
+
 ### Milestone 2: Calculus & Linear Algebra Engine (v0.2.0 - Planned)
 * [ ] **Numerical Definite Integration**:
   * Implement adaptive 15-point Gauss-Kronrod quadrature (`GK15`).
