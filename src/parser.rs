@@ -16,7 +16,11 @@ const MAX_DEPTH: usize = 512;
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, pos: 0, depth: 0 }
+        Self {
+            tokens,
+            pos: 0,
+            depth: 0,
+        }
     }
 
     fn peek(&self) -> Option<&Token> {
@@ -88,7 +92,10 @@ impl Parser {
         loop {
             let is_arrow = self.peek() == Some(&Token::Arrow);
             let is_in_conversion = if self.peek() == Some(&Token::In) {
-                matches!(self.tokens.get(self.pos + 1), Some(Token::Ident(_)) | Some(Token::In))
+                matches!(
+                    self.tokens.get(self.pos + 1),
+                    Some(Token::Ident(_)) | Some(Token::In)
+                )
             } else {
                 false
             };
@@ -134,10 +141,22 @@ impl Parser {
             }
 
             cur_expr = match target_str.to_lowercase().as_str() {
-                "hex" => Expr::ToBase { expr: Box::new(cur_expr), base: 16 },
-                "bin" => Expr::ToBase { expr: Box::new(cur_expr), base: 2 },
-                "oct" => Expr::ToBase { expr: Box::new(cur_expr), base: 8 },
-                "dec" => Expr::ToBase { expr: Box::new(cur_expr), base: 10 },
+                "hex" => Expr::ToBase {
+                    expr: Box::new(cur_expr),
+                    base: 16,
+                },
+                "bin" => Expr::ToBase {
+                    expr: Box::new(cur_expr),
+                    base: 2,
+                },
+                "oct" => Expr::ToBase {
+                    expr: Box::new(cur_expr),
+                    base: 8,
+                },
+                "dec" => Expr::ToBase {
+                    expr: Box::new(cur_expr),
+                    base: 10,
+                },
                 "factors" | "factor" => Expr::Call("factor".to_string(), vec![cur_expr]),
                 _ => Expr::Convert {
                     expr: Box::new(cur_expr),
@@ -245,10 +264,16 @@ impl Parser {
 
     fn is_implicit_mul_start(&self) -> bool {
         match self.peek() {
-            Some(Token::Ident(_)) | Some(Token::LParen) | Some(Token::Number(_)) | Some(Token::FeetInches(_, _)) => true,
+            Some(Token::Ident(_))
+            | Some(Token::LParen)
+            | Some(Token::Number(_))
+            | Some(Token::FeetInches(_, _)) => true,
             Some(Token::In) => {
                 // If followed by Arrow, RParen, or EOF, 'in' is the unit inch!
-                matches!(self.tokens.get(self.pos + 1), None | Some(Token::Arrow) | Some(Token::RParen))
+                matches!(
+                    self.tokens.get(self.pos + 1),
+                    None | Some(Token::Arrow) | Some(Token::RParen)
+                )
             }
             _ => false,
         }
@@ -265,12 +290,12 @@ impl Parser {
     }
 
     fn parse_primary_inner(&mut self) -> Result<Expr, String> {
-        let tok = self.advance().ok_or_else(|| "Unexpected end of input".to_string())?;
+        let tok = self
+            .advance()
+            .ok_or_else(|| "Unexpected end of input".to_string())?;
 
         match tok {
-            Token::In => {
-                Ok(Expr::Unit("in".to_string()))
-            }
+            Token::In => Ok(Expr::Unit("in".to_string())),
             Token::PercentPostfix => {
                 Err("Unexpected percentage symbol without preceding value".to_string())
             }
@@ -296,16 +321,25 @@ impl Parser {
                 Ok(expr)
             }
             Token::Hex(s) => {
-                let b = BigInt::from_str_radix(&s, 16).map_err(|e| format!("Invalid hex: {}", e))?;
-                Ok(Expr::Number(NumericValue::Exact(BigRational::from_integer(b))))
+                let b =
+                    BigInt::from_str_radix(&s, 16).map_err(|e| format!("Invalid hex: {}", e))?;
+                Ok(Expr::Number(NumericValue::Exact(
+                    BigRational::from_integer(b),
+                )))
             }
             Token::Bin(s) => {
-                let b = BigInt::from_str_radix(&s, 2).map_err(|e| format!("Invalid binary: {}", e))?;
-                Ok(Expr::Number(NumericValue::Exact(BigRational::from_integer(b))))
+                let b =
+                    BigInt::from_str_radix(&s, 2).map_err(|e| format!("Invalid binary: {}", e))?;
+                Ok(Expr::Number(NumericValue::Exact(
+                    BigRational::from_integer(b),
+                )))
             }
             Token::Oct(s) => {
-                let b = BigInt::from_str_radix(&s, 8).map_err(|e| format!("Invalid octal: {}", e))?;
-                Ok(Expr::Number(NumericValue::Exact(BigRational::from_integer(b))))
+                let b =
+                    BigInt::from_str_radix(&s, 8).map_err(|e| format!("Invalid octal: {}", e))?;
+                Ok(Expr::Number(NumericValue::Exact(
+                    BigRational::from_integer(b),
+                )))
             }
             Token::FeetInches(ft, inch) => {
                 // Standalone feet (ft > 0, inch == 0)
@@ -335,7 +369,11 @@ impl Parser {
                     BinaryOp::Mul,
                     Box::new(Expr::Unit("in".to_string())),
                 );
-                Ok(Expr::Binary(Box::new(ft_expr), BinaryOp::Add, Box::new(in_expr)))
+                Ok(Expr::Binary(
+                    Box::new(ft_expr),
+                    BinaryOp::Add,
+                    Box::new(in_expr),
+                ))
             }
             Token::Ident(name) => {
                 // Check if it's a function call: name(...)
@@ -345,7 +383,9 @@ impl Parser {
                     if self.peek() != Some(&Token::RParen) {
                         loop {
                             args.push(self.parse_conversion_or_equation()?);
-                            if self.peek() == Some(&Token::Comma) || self.peek() == Some(&Token::Semicolon) {
+                            if self.peek() == Some(&Token::Comma)
+                                || self.peek() == Some(&Token::Semicolon)
+                            {
                                 self.advance();
                             } else {
                                 break;
@@ -360,7 +400,9 @@ impl Parser {
                 match name.as_str() {
                     "pi" => Ok(Expr::Number(NumericValue::from_f64(std::f64::consts::PI))),
                     "tau" => Ok(Expr::Number(NumericValue::from_f64(std::f64::consts::TAU))),
-                    "phi" => Ok(Expr::Number(NumericValue::from_f64((1.0 + 5.0f64.sqrt()) / 2.0))),
+                    "phi" => Ok(Expr::Number(NumericValue::from_f64(
+                        (1.0 + 5.0f64.sqrt()) / 2.0,
+                    ))),
                     "e" => Ok(Expr::Number(NumericValue::from_f64(std::f64::consts::E))),
                     "c" => {
                         // Speed of light in vacuum = 299792458 m/s
@@ -374,7 +416,9 @@ impl Parser {
                             )),
                         ))
                     }
-                    "i" => Ok(Expr::Number(NumericValue::Complex(num_complex::Complex64::new(0.0, 1.0)))),
+                    "i" => Ok(Expr::Number(NumericValue::Complex(
+                        num_complex::Complex64::new(0.0, 1.0),
+                    ))),
                     _ => {
                         // Check if it's known unit or variable
                         Ok(Expr::Unit(name))
@@ -389,13 +433,14 @@ impl Parser {
                     } else {
                         let s_neg = format!("-{}", s);
                         self.advance();
-                        let mut expr = if s_neg.contains('.') || s_neg.contains('e') || s_neg.contains('E') {
-                            let f = s_neg.parse::<f64>().map_err(|e| e.to_string())?;
-                            Expr::Number(NumericValue::from_f64(f))
-                        } else {
-                            let b = BigInt::from_str(&s_neg).map_err(|e| e.to_string())?;
-                            Expr::Number(NumericValue::Exact(BigRational::from_integer(b)))
-                        };
+                        let mut expr =
+                            if s_neg.contains('.') || s_neg.contains('e') || s_neg.contains('E') {
+                                let f = s_neg.parse::<f64>().map_err(|e| e.to_string())?;
+                                Expr::Number(NumericValue::from_f64(f))
+                            } else {
+                                let b = BigInt::from_str(&s_neg).map_err(|e| e.to_string())?;
+                                Expr::Number(NumericValue::Exact(BigRational::from_integer(b)))
+                            };
 
                         // Check for immediate percent postfix
                         if self.peek() == Some(&Token::PercentPostfix) {
@@ -414,9 +459,7 @@ impl Parser {
                     Ok(Expr::Unary(UnaryOp::Neg, Box::new(inner)))
                 }
             }
-            Token::Plus => {
-                self.parse_binary(9)
-            }
+            Token::Plus => self.parse_binary(9),
             Token::Tilde => {
                 let inner = self.parse_binary(9)?;
                 Ok(Expr::Unary(UnaryOp::Not, Box::new(inner)))

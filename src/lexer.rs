@@ -149,7 +149,9 @@ impl<'a> Lexer<'a> {
             }
 
             // Feet-inches notation and numbers (including leading decimal like .5)
-            if ch.is_ascii_digit() || (ch == '.' && self.peek_next().is_some_and(|n| n.is_ascii_digit())) {
+            if ch.is_ascii_digit()
+                || (ch == '.' && self.peek_next().is_some_and(|n| n.is_ascii_digit()))
+            {
                 // Peek ahead to see if it's feet-inches format like 5'10", 5', 10"
                 if let Some(token) = self.try_lex_feet_inches() {
                     tokens.push(token);
@@ -171,6 +173,9 @@ impl<'a> Lexer<'a> {
                             break;
                         }
                     }
+                    if hex_str.is_empty() {
+                        return Err("Malformed hexadecimal literal: '0x' must be followed by at least one hex digit".to_string());
+                    }
                     tokens.push(Token::Hex(hex_str));
                     continue;
                 }
@@ -189,6 +194,9 @@ impl<'a> Lexer<'a> {
                             break;
                         }
                     }
+                    if bin_str.is_empty() {
+                        return Err("Malformed binary literal: '0b' must be followed by at least one binary digit".to_string());
+                    }
                     tokens.push(Token::Bin(bin_str));
                     continue;
                 }
@@ -206,6 +214,9 @@ impl<'a> Lexer<'a> {
                         } else {
                             break;
                         }
+                    }
+                    if oct_str.is_empty() {
+                        return Err("Malformed octal literal: '0o' must be followed by at least one octal digit".to_string());
                     }
                     tokens.push(Token::Oct(oct_str));
                     continue;
@@ -229,9 +240,10 @@ impl<'a> Lexer<'a> {
                     } else if (c == 'e' || c == 'E') && !seen_exp {
                         let is_valid_exp = match self.peek_next() {
                             Some(d) if d.is_ascii_digit() => true,
-                            Some('+' | '-') => {
-                                self.chars.get(self.pos + 2).is_some_and(|d| d.is_ascii_digit())
-                            }
+                            Some('+' | '-') => self
+                                .chars
+                                .get(self.pos + 2)
+                                .is_some_and(|d| d.is_ascii_digit()),
                             _ => false,
                         };
                         if is_valid_exp {
@@ -239,10 +251,11 @@ impl<'a> Lexer<'a> {
                             num_str.push(c);
                             self.advance();
                             if let Some(next_c) = self.peek()
-                                && (next_c == '+' || next_c == '-') {
-                                    num_str.push(next_c);
-                                    self.advance();
-                                }
+                                && (next_c == '+' || next_c == '-')
+                            {
+                                num_str.push(next_c);
+                                self.advance();
+                            }
                         } else {
                             break;
                         }
@@ -264,7 +277,13 @@ impl<'a> Lexer<'a> {
             if ch.is_alphabetic() || ch == '_' || ch == 'π' || ch == 'τ' || ch == 'φ' {
                 let mut ident = String::new();
                 while let Some(c) = self.peek() {
-                    if c.is_alphanumeric() || c == '_' || c == '°' || c == 'π' || c == 'τ' || c == 'φ' {
+                    if c.is_alphanumeric()
+                        || c == '_'
+                        || c == '°'
+                        || c == 'π'
+                        || c == 'τ'
+                        || c == 'φ'
+                    {
                         ident.push(c);
                         self.advance();
                     } else {
@@ -287,25 +306,79 @@ impl<'a> Lexer<'a> {
 
             // Single-character symbols
             match ch {
-                '+' => { self.advance(); tokens.push(Token::Plus); }
-                '-' => { self.advance(); tokens.push(Token::Minus); }
-                '*' => { self.advance(); tokens.push(Token::Star); }
-                '/' => { self.advance(); tokens.push(Token::Slash); }
-                '%' => { self.advance(); tokens.push(Token::Percent); }
-                '^' => { self.advance(); tokens.push(Token::Caret); }
-                '&' => { self.advance(); tokens.push(Token::Ampersand); }
-                '|' => { self.advance(); tokens.push(Token::Pipe); }
-                '~' => { self.advance(); tokens.push(Token::Tilde); }
-                '=' => { self.advance(); tokens.push(Token::Equal); }
-                '\'' => { self.advance(); tokens.push(Token::Prime); }
-                '(' => { self.advance(); tokens.push(Token::LParen); }
-                ')' => { self.advance(); tokens.push(Token::RParen); }
-                '[' => { self.advance(); tokens.push(Token::LBracket); }
-                ']' => { self.advance(); tokens.push(Token::RBracket); }
-                ',' => { self.advance(); tokens.push(Token::Comma); }
-                ';' => { self.advance(); tokens.push(Token::Semicolon); }
+                '+' => {
+                    self.advance();
+                    tokens.push(Token::Plus);
+                }
+                '-' => {
+                    self.advance();
+                    tokens.push(Token::Minus);
+                }
+                '*' => {
+                    self.advance();
+                    tokens.push(Token::Star);
+                }
+                '/' => {
+                    self.advance();
+                    tokens.push(Token::Slash);
+                }
+                '%' => {
+                    self.advance();
+                    tokens.push(Token::Percent);
+                }
+                '^' => {
+                    self.advance();
+                    tokens.push(Token::Caret);
+                }
+                '&' => {
+                    self.advance();
+                    tokens.push(Token::Ampersand);
+                }
+                '|' => {
+                    self.advance();
+                    tokens.push(Token::Pipe);
+                }
+                '~' => {
+                    self.advance();
+                    tokens.push(Token::Tilde);
+                }
+                '=' => {
+                    self.advance();
+                    tokens.push(Token::Equal);
+                }
+                '\'' => {
+                    self.advance();
+                    tokens.push(Token::Prime);
+                }
+                '(' => {
+                    self.advance();
+                    tokens.push(Token::LParen);
+                }
+                ')' => {
+                    self.advance();
+                    tokens.push(Token::RParen);
+                }
+                '[' => {
+                    self.advance();
+                    tokens.push(Token::LBracket);
+                }
+                ']' => {
+                    self.advance();
+                    tokens.push(Token::RBracket);
+                }
+                ',' => {
+                    self.advance();
+                    tokens.push(Token::Comma);
+                }
+                ';' => {
+                    self.advance();
+                    tokens.push(Token::Semicolon);
+                }
                 _ => {
-                    return Err(format!("Unexpected character: '{}' at position {}", ch, self.pos));
+                    return Err(format!(
+                        "Unexpected character: '{}' at position {}",
+                        ch, self.pos
+                    ));
                 }
             }
         }

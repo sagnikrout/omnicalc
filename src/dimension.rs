@@ -31,27 +31,105 @@ impl Dimension {
         currency: 0,
     };
 
-    pub const LENGTH: Self = Self { length: 1, ..Self::DIMENSIONLESS };
-    pub const MASS: Self = Self { mass: 1, ..Self::DIMENSIONLESS };
-    pub const TIME: Self = Self { time: 1, ..Self::DIMENSIONLESS };
-    pub const CURRENT: Self = Self { current: 1, ..Self::DIMENSIONLESS };
-    pub const TEMPERATURE: Self = Self { temperature: 1, ..Self::DIMENSIONLESS };
-    pub const AMOUNT: Self = Self { amount: 1, ..Self::DIMENSIONLESS };
-    pub const LUMINOSITY: Self = Self { luminosity: 1, ..Self::DIMENSIONLESS };
-    pub const DIGITAL: Self = Self { digital: 1, ..Self::DIMENSIONLESS };
-    pub const CURRENCY: Self = Self { currency: 1, ..Self::DIMENSIONLESS };
+    pub const LENGTH: Self = Self {
+        length: 1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const MASS: Self = Self {
+        mass: 1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const TIME: Self = Self {
+        time: 1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const CURRENT: Self = Self {
+        current: 1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const TEMPERATURE: Self = Self {
+        temperature: 1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const AMOUNT: Self = Self {
+        amount: 1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const LUMINOSITY: Self = Self {
+        luminosity: 1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const DIGITAL: Self = Self {
+        digital: 1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const CURRENCY: Self = Self {
+        currency: 1,
+        ..Self::DIMENSIONLESS
+    };
 
-    pub const VELOCITY: Self = Self { length: 1, time: -1, ..Self::DIMENSIONLESS };
-    pub const ACCELERATION: Self = Self { length: 1, time: -2, ..Self::DIMENSIONLESS };
-    pub const FORCE: Self = Self { length: 1, mass: 1, time: -2, ..Self::DIMENSIONLESS };
-    pub const ENERGY: Self = Self { length: 2, mass: 1, time: -2, ..Self::DIMENSIONLESS };
-    pub const POWER: Self = Self { length: 2, mass: 1, time: -3, ..Self::DIMENSIONLESS };
-    pub const PRESSURE: Self = Self { length: -1, mass: 1, time: -2, ..Self::DIMENSIONLESS };
-    pub const VOLTAGE: Self = Self { length: 2, mass: 1, time: -3, current: -1, ..Self::DIMENSIONLESS };
-    pub const RESISTANCE: Self = Self { length: 2, mass: 1, time: -3, current: -2, ..Self::DIMENSIONLESS };
-    pub const CHARGE: Self = Self { time: 1, current: 1, ..Self::DIMENSIONLESS };
-    pub const FREQUENCY: Self = Self { time: -1, ..Self::DIMENSIONLESS };
-    pub const DATA_RATE: Self = Self { digital: 1, time: -1, ..Self::DIMENSIONLESS };
+    pub const VELOCITY: Self = Self {
+        length: 1,
+        time: -1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const ACCELERATION: Self = Self {
+        length: 1,
+        time: -2,
+        ..Self::DIMENSIONLESS
+    };
+    pub const FORCE: Self = Self {
+        length: 1,
+        mass: 1,
+        time: -2,
+        ..Self::DIMENSIONLESS
+    };
+    pub const ENERGY: Self = Self {
+        length: 2,
+        mass: 1,
+        time: -2,
+        ..Self::DIMENSIONLESS
+    };
+    pub const POWER: Self = Self {
+        length: 2,
+        mass: 1,
+        time: -3,
+        ..Self::DIMENSIONLESS
+    };
+    pub const PRESSURE: Self = Self {
+        length: -1,
+        mass: 1,
+        time: -2,
+        ..Self::DIMENSIONLESS
+    };
+    pub const VOLTAGE: Self = Self {
+        length: 2,
+        mass: 1,
+        time: -3,
+        current: -1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const RESISTANCE: Self = Self {
+        length: 2,
+        mass: 1,
+        time: -3,
+        current: -2,
+        ..Self::DIMENSIONLESS
+    };
+    pub const CHARGE: Self = Self {
+        time: 1,
+        current: 1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const FREQUENCY: Self = Self {
+        time: -1,
+        ..Self::DIMENSIONLESS
+    };
+    pub const DATA_RATE: Self = Self {
+        digital: 1,
+        time: -1,
+        ..Self::DIMENSIONLESS
+    };
 
     pub fn is_dimensionless(&self) -> bool {
         *self == Self::DIMENSIONLESS

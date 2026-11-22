@@ -147,3 +147,91 @@ fn test_edge_case_errors() {
     assert!(eval_expr("x^2 = -1").is_err());
     assert!(eval_expr("1 << 64").is_err());
 }
+
+#[test]
+fn test_affine_temperature_safety() {
+    // Subtraction of two absolute temperatures yields difference in Kelvin
+    let diff = eval_expr("20 degC - 10 degC").unwrap();
+    assert_eq!(diff, "10 K");
+
+    // Adding two absolute temperatures is physically invalid
+    let add_err = eval_expr("10 degC + 20 degC").unwrap_err();
+    assert!(add_err.contains("Cannot add two affine temperatures"));
+
+    // Adding/subtracting temperature difference to absolute temperature
+    let add_diff = eval_expr("20 degC + 5 K").unwrap();
+    assert_eq!(add_diff, "25 degC");
+
+    let sub_diff = eval_expr("20 degC - 5 K").unwrap();
+    assert_eq!(sub_diff, "15 degC");
+
+    // Subtracting absolute temperature from difference is invalid
+    assert!(eval_expr("5 K - 20 degC").is_err());
+}
+
+#[test]
+fn test_bitwise_integer_and_dimension_validation() {
+    // Rejects non-integers
+    let err1 = eval_expr("2.5 & 3").unwrap_err();
+    assert!(err1.contains("Bitwise operations require integer operands"));
+
+    // Rejects dimensioned quantities
+    let err2 = eval_expr("5 m & 3 m").unwrap_err();
+    assert!(err2.contains("Bitwise operations require dimensionless operands"));
+
+    // Bitwise NOT rejects floats and dimensioned values
+    assert!(eval_expr("~2.5").is_err());
+    assert!(eval_expr("~5 m").is_err());
+}
+
+#[test]
+fn test_malformed_radix_rejection() {
+    assert!(eval_expr("0x").is_err());
+    assert!(eval_expr("0b").is_err());
+    assert!(eval_expr("0o").is_err());
+}
+
+#[test]
+fn test_evaluator_function_arity_and_dimensions() {
+    // Mathematical functions require dimensionless arguments
+    let err_sin = eval_expr("sin(5 m)").unwrap_err();
+    assert!(err_sin.contains("Domain error"));
+
+    let err_sqrt = eval_expr("sqrt(5 m)").unwrap_err();
+    assert!(err_sqrt.contains("Dimensional error"));
+
+    // Excess arguments rejected
+    assert!(eval_expr("sin(1, 2)").is_err());
+    assert!(eval_expr("cos(1, 2)").is_err());
+    assert!(eval_expr("sqrt(4, 2)").is_err());
+
+    // Empty AST calls rejected without panicking
+    assert!(eval_expr("diff()").is_err());
+    assert!(eval_expr("factor()").is_err());
+}
+
+#[test]
+fn test_equation_solver_degeneracy_and_variables() {
+    // Identity equation
+    let id_res = eval_expr("x = x").unwrap();
+    assert!(id_res.contains("Identity"));
+
+    // Contradiction equation
+    let contra_err = eval_expr("x = x + 5").unwrap_err();
+    assert!(contra_err.contains("Contradiction"));
+
+    // Variable auto-detection for non-x variables
+    let y_res = eval_expr("2y + 4 = 10").unwrap();
+    assert_eq!(y_res, "y = 3");
+}
+
+#[test]
+fn test_dimensional_power_safety() {
+    // Fractional exponent on dimensioned quantity rejected
+    let err_frac = eval_expr("(5 m)^2.5").unwrap_err();
+    assert!(err_frac.contains("Non-integer dimensional exponent"));
+
+    // Exponent overflow rejected
+    let err_over = eval_expr("(5 m)^130").unwrap_err();
+    assert!(err_over.contains("Dimensional exponent overflow"));
+}

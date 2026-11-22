@@ -7,7 +7,21 @@
 
 set -u
 
-BINARY="${OMNICALC_BIN:-/home/sagnik/bin/omnicalc}"
+if [ -z "${OMNICALC_BIN:-}" ]; then
+    if [ -x "./target/release/omnicalc" ]; then
+        BINARY="./target/release/omnicalc"
+    elif [ -x "./target/debug/omnicalc" ]; then
+        BINARY="./target/debug/omnicalc"
+    elif command -v omnicalc >/dev/null 2>&1; then
+        BINARY="$(command -v omnicalc)"
+    elif [ -x "$HOME/bin/omnicalc" ]; then
+        BINARY="$HOME/bin/omnicalc"
+    else
+        BINARY="./target/release/omnicalc"
+    fi
+else
+    BINARY="$OMNICALC_BIN"
+fi
 LOG_FILE="${OMNICALC_LOG:-/tmp/omnicalc_destructive_test.log}"
 LOG="$LOG_FILE"
 CRASH_LOG="/tmp/omnicalc_crash_repro.log"
@@ -30,7 +44,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo "================================================================================"
-echo "Starting omnicalc Unified Master Destructive Test Suite (442 Total Tests)"
+echo "Starting omnicalc Unified Master Destructive Test Suite"
 echo "Target Binary: $BINARY"
 echo "Timestamp: $(date -Iseconds)"
 echo "================================================================================"
@@ -987,6 +1001,14 @@ run_test "TC-CLI-02" "CLI" "Raw mode hex: -r -b hex -e 255" "SUCCESS:ff" -r -b h
 run_test "TC-CLI-03" "CLI" "Negative expression escape: -- -5 + 10" "SUCCESS:5" -- '-5 + 10'
 run_test "TC-CLI-04" "CLI" "Empty expression rejection: -e \"\"" "ERROR:Empty input" -e ''
 run_test "TC-CLI-05" "CLI" "Division by zero pipe safety: 1/0" "ERROR:Division by zero" -e 1/0
+run_test "TC-AUDIT-01" "Audit" "Affine temperature subtraction: 20 degC - 10 degC" "SUCCESS:10 K" -e '20 degC - 10 degC'
+run_test "TC-AUDIT-02" "Audit" "Affine temperature addition rejection: 10 degC + 20 degC" "ERROR:Cannot add two affine temperatures" -e '10 degC + 20 degC'
+run_test "TC-AUDIT-03" "Audit" "Bitwise float rejection: 2.5 & 3" "ERROR:Bitwise operations require integer operands" -e '2.5 & 3'
+run_test "TC-AUDIT-04" "Audit" "Malformed hexadecimal rejection: 0x" "ERROR:Malformed hexadecimal literal" -e '0x'
+run_test "TC-AUDIT-05" "Audit" "Empty diff argument rejection: diff()" "ERROR:Function 'diff' requires at least 1 argument" -e 'diff()'
+run_test "TC-AUDIT-06" "Audit" "Identity equation: x = x" "SUCCESS:Identity: all real numbers satisfy this equation" -e 'x = x'
+run_test "TC-AUDIT-07" "Audit" "Contradiction equation: x = x + 5" "ERROR:Contradiction: equation has no solution" -e 'x = x + 5'
+run_test "TC-AUDIT-08" "Audit" "Dimensional power fractional check: (5 m)^2.5" "ERROR:Non-integer dimensional exponent" -e '(5 m)^2.5'
 
 # ------------------------------------------------------------------------------
 # FINAL REPORT GENERATION

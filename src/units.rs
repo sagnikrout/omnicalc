@@ -24,7 +24,14 @@ impl UnitRegistry {
         reg
     }
 
-    fn add_unit(&mut self, symbol: &str, name: &str, dimension: Dimension, scale: f64, offset: f64) {
+    fn add_unit(
+        &mut self,
+        symbol: &str,
+        name: &str,
+        dimension: Dimension,
+        scale: f64,
+        offset: f64,
+    ) {
         let def = UnitDefinition {
             symbol: symbol.to_string(),
             name: name.to_string(),
@@ -48,8 +55,20 @@ impl UnitRegistry {
         self.add_unit("yd", "yard", Dimension::LENGTH, 0.9144, 0.0);
         self.add_unit("ft", "foot", Dimension::LENGTH, 0.3048, 0.0);
         self.add_unit("in", "inch", Dimension::LENGTH, 0.0254, 0.0);
-        self.add_unit("ly", "lightyear", Dimension::LENGTH, 9.4607304725808e15, 0.0);
-        self.add_unit("au", "astronomical_unit", Dimension::LENGTH, 1.495978707e11, 0.0);
+        self.add_unit(
+            "ly",
+            "lightyear",
+            Dimension::LENGTH,
+            9.4607304725808e15,
+            0.0,
+        );
+        self.add_unit(
+            "au",
+            "astronomical_unit",
+            Dimension::LENGTH,
+            1.495978707e11,
+            0.0,
+        );
 
         // Mass (M)
         self.add_unit("kg", "kilogram", Dimension::MASS, 1.0, 0.0);
@@ -81,13 +100,31 @@ impl UnitRegistry {
         // Temperature (Θ)
         self.add_unit("K", "kelvin", Dimension::TEMPERATURE, 1.0, 0.0);
         self.add_unit("degC", "celsius", Dimension::TEMPERATURE, 1.0, 273.15);
-        self.add_unit("degF", "fahrenheit", Dimension::TEMPERATURE, 5.0 / 9.0, 459.67);
+        self.add_unit(
+            "degF",
+            "fahrenheit",
+            Dimension::TEMPERATURE,
+            5.0 / 9.0,
+            459.67,
+        );
 
         // Angle (Dimensionless)
         self.add_unit("rad", "radian", Dimension::DIMENSIONLESS, 1.0, 0.0);
         self.add_unit("rads", "radians", Dimension::DIMENSIONLESS, 1.0, 0.0);
-        self.add_unit("deg", "degree", Dimension::DIMENSIONLESS, std::f64::consts::PI / 180.0, 0.0);
-        self.add_unit("degrees", "degrees", Dimension::DIMENSIONLESS, std::f64::consts::PI / 180.0, 0.0);
+        self.add_unit(
+            "deg",
+            "degree",
+            Dimension::DIMENSIONLESS,
+            std::f64::consts::PI / 180.0,
+            0.0,
+        );
+        self.add_unit(
+            "degrees",
+            "degrees",
+            Dimension::DIMENSIONLESS,
+            std::f64::consts::PI / 180.0,
+            0.0,
+        );
 
         // Frequency
         self.add_unit("Hz", "hertz", Dimension::FREQUENCY, 1.0, 0.0);
@@ -98,7 +135,13 @@ impl UnitRegistry {
 
         // Velocity
         self.add_unit("kph", "kmh", Dimension::VELOCITY, 1000.0 / 3600.0, 0.0);
-        self.add_unit("mph", "miles_per_hour", Dimension::VELOCITY, 1609.344 / 3600.0, 0.0);
+        self.add_unit(
+            "mph",
+            "miles_per_hour",
+            Dimension::VELOCITY,
+            1609.344 / 3600.0,
+            0.0,
+        );
         self.add_unit("knot", "knots", Dimension::VELOCITY, 1852.0 / 3600.0, 0.0);
 
         // Force
@@ -114,13 +157,25 @@ impl UnitRegistry {
         self.add_unit("kcal", "kilocalorie", Dimension::ENERGY, 4184.0, 0.0);
         self.add_unit("Wh", "watt_hour", Dimension::ENERGY, 3600.0, 0.0);
         self.add_unit("kWh", "kilowatt_hour", Dimension::ENERGY, 3.6e6, 0.0);
-        self.add_unit("eV", "electronvolt", Dimension::ENERGY, 1.602176634e-19, 0.0);
+        self.add_unit(
+            "eV",
+            "electronvolt",
+            Dimension::ENERGY,
+            1.602176634e-19,
+            0.0,
+        );
 
         // Power
         self.add_unit("W", "watt", Dimension::POWER, 1.0, 0.0);
         self.add_unit("kW", "kilowatt", Dimension::POWER, 1000.0, 0.0);
         self.add_unit("MW", "megawatt", Dimension::POWER, 1e6, 0.0);
-        self.add_unit("hp", "horsepower", Dimension::POWER, 745.699_871_582_270_2, 0.0);
+        self.add_unit(
+            "hp",
+            "horsepower",
+            Dimension::POWER,
+            745.699_871_582_270_2,
+            0.0,
+        );
 
         // Pressure
         self.add_unit("Pa", "pascal", Dimension::PRESSURE, 1.0, 0.0);
@@ -129,7 +184,13 @@ impl UnitRegistry {
         self.add_unit("bar", "bars", Dimension::PRESSURE, 100000.0, 0.0);
         self.add_unit("mbar", "millibar", Dimension::PRESSURE, 100.0, 0.0);
         self.add_unit("atm", "atmosphere", Dimension::PRESSURE, 101325.0, 0.0);
-        self.add_unit("psi", "pounds_per_sq_in", Dimension::PRESSURE, 6894.757293168, 0.0);
+        self.add_unit(
+            "psi",
+            "pounds_per_sq_in",
+            Dimension::PRESSURE,
+            6894.757293168,
+            0.0,
+        );
         self.add_unit("torr", "mmHg", Dimension::PRESSURE, 133.322368421, 0.0);
 
         // Electromagnetism
@@ -152,8 +213,20 @@ impl UnitRegistry {
         self.add_unit("gigabits", "gigabit", Dimension::DIGITAL, 1e9, 0.0);
         self.add_unit("terabits", "terabit", Dimension::DIGITAL, 1e12, 0.0);
         self.add_unit("kibibit", "kibibit", Dimension::DIGITAL, 1024.0, 0.0);
-        self.add_unit("mebibit", "mebibit", Dimension::DIGITAL, 1024.0 * 1024.0, 0.0);
-        self.add_unit("gibibit", "gibibit", Dimension::DIGITAL, 1024.0 * 1024.0 * 1024.0, 0.0);
+        self.add_unit(
+            "mebibit",
+            "mebibit",
+            Dimension::DIGITAL,
+            1024.0 * 1024.0,
+            0.0,
+        );
+        self.add_unit(
+            "gibibit",
+            "gibibit",
+            Dimension::DIGITAL,
+            1024.0 * 1024.0 * 1024.0,
+            0.0,
+        );
 
         self.add_unit("B", "byte", Dimension::DIGITAL, 8.0, 0.0);
         self.add_unit("bytes", "Bytes", Dimension::DIGITAL, 8.0, 0.0);
@@ -166,23 +239,91 @@ impl UnitRegistry {
         self.add_unit("gigabytes", "gigabyte", Dimension::DIGITAL, 8.0 * 1e9, 0.0);
         self.add_unit("terabytes", "terabyte", Dimension::DIGITAL, 8.0 * 1e12, 0.0);
         self.add_unit("KiB", "kibibyte", Dimension::DIGITAL, 8.0 * 1024.0, 0.0);
-        self.add_unit("MiB", "mebibyte", Dimension::DIGITAL, 8.0 * 1024.0 * 1024.0, 0.0);
-        self.add_unit("GiB", "gibibyte", Dimension::DIGITAL, 8.0 * 1024.0 * 1024.0 * 1024.0, 0.0);
-        self.add_unit("TiB", "tebibyte", Dimension::DIGITAL, 8.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0, 0.0);
-        self.add_unit("kibibytes", "kibibyte", Dimension::DIGITAL, 8.0 * 1024.0, 0.0);
-        self.add_unit("mebibytes", "mebibyte", Dimension::DIGITAL, 8.0 * 1024.0 * 1024.0, 0.0);
-        self.add_unit("gibibytes", "gibibyte", Dimension::DIGITAL, 8.0 * 1024.0 * 1024.0 * 1024.0, 0.0);
-        self.add_unit("tebibytes", "tebibyte", Dimension::DIGITAL, 8.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0, 0.0);
+        self.add_unit(
+            "MiB",
+            "mebibyte",
+            Dimension::DIGITAL,
+            8.0 * 1024.0 * 1024.0,
+            0.0,
+        );
+        self.add_unit(
+            "GiB",
+            "gibibyte",
+            Dimension::DIGITAL,
+            8.0 * 1024.0 * 1024.0 * 1024.0,
+            0.0,
+        );
+        self.add_unit(
+            "TiB",
+            "tebibyte",
+            Dimension::DIGITAL,
+            8.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0,
+            0.0,
+        );
+        self.add_unit(
+            "kibibytes",
+            "kibibyte",
+            Dimension::DIGITAL,
+            8.0 * 1024.0,
+            0.0,
+        );
+        self.add_unit(
+            "mebibytes",
+            "mebibyte",
+            Dimension::DIGITAL,
+            8.0 * 1024.0 * 1024.0,
+            0.0,
+        );
+        self.add_unit(
+            "gibibytes",
+            "gibibyte",
+            Dimension::DIGITAL,
+            8.0 * 1024.0 * 1024.0 * 1024.0,
+            0.0,
+        );
+        self.add_unit(
+            "tebibytes",
+            "tebibyte",
+            Dimension::DIGITAL,
+            8.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0,
+            0.0,
+        );
 
         // Data Rates (D / T)
         self.add_unit("bps", "bits_per_second", Dimension::DATA_RATE, 1.0, 0.0);
-        self.add_unit("kbps", "kilobits_per_second", Dimension::DATA_RATE, 1e3, 0.0);
-        self.add_unit("Mbps", "megabits_per_second", Dimension::DATA_RATE, 1e6, 0.0);
-        self.add_unit("Gbps", "gigabits_per_second", Dimension::DATA_RATE, 1e9, 0.0);
+        self.add_unit(
+            "kbps",
+            "kilobits_per_second",
+            Dimension::DATA_RATE,
+            1e3,
+            0.0,
+        );
+        self.add_unit(
+            "Mbps",
+            "megabits_per_second",
+            Dimension::DATA_RATE,
+            1e6,
+            0.0,
+        );
+        self.add_unit(
+            "Gbps",
+            "gigabits_per_second",
+            Dimension::DATA_RATE,
+            1e9,
+            0.0,
+        );
         self.add_unit("Bps", "bytes_per_second", Dimension::DATA_RATE, 8.0, 0.0);
-        self.add_unit("MBps", "megabytes_per_second", Dimension::DATA_RATE, 8.0 * 1e6, 0.0);
+        self.add_unit(
+            "MBps",
+            "megabytes_per_second",
+            Dimension::DATA_RATE,
+            8.0 * 1e6,
+            0.0,
+        );
 
-        // Currencies (C) - baseline 2026 exchange rates to USD
+        // Currencies (C) - Offline baseline reference exchange rates to USD (dated November 2026).
+        // Note: These rates provide offline dimensional conversion parity and approximate estimation.
+        // They are static and do not reflect live real-time financial market exchange rates.
         self.add_unit("USD", "dollar", Dimension::CURRENCY, 1.0, 0.0);
         self.add_unit("EUR", "euro", Dimension::CURRENCY, 1.038, 0.0);
         self.add_unit("GBP", "pound_sterling", Dimension::CURRENCY, 1.250, 0.0);
@@ -195,12 +336,42 @@ impl UnitRegistry {
 
         // Common compound units
         self.add_unit("m/s", "meters_per_second", Dimension::VELOCITY, 1.0, 0.0);
-        self.add_unit("km/h", "kilometers_per_hour", Dimension::VELOCITY, 1000.0 / 3600.0, 0.0);
+        self.add_unit(
+            "km/h",
+            "kilometers_per_hour",
+            Dimension::VELOCITY,
+            1000.0 / 3600.0,
+            0.0,
+        );
         self.add_unit("m^2", "square_meter", Dimension::LENGTH.pow(2), 1.0, 0.0);
-        self.add_unit("cm^2", "square_centimeter", Dimension::LENGTH.pow(2), 0.0001, 0.0);
-        self.add_unit("mm^2", "square_millimeter", Dimension::LENGTH.pow(2), 1e-6, 0.0);
-        self.add_unit("ft^2", "square_foot", Dimension::LENGTH.pow(2), 0.3048 * 0.3048, 0.0);
-        self.add_unit("in^2", "square_inch", Dimension::LENGTH.pow(2), 0.0254 * 0.0254, 0.0);
+        self.add_unit(
+            "cm^2",
+            "square_centimeter",
+            Dimension::LENGTH.pow(2),
+            0.0001,
+            0.0,
+        );
+        self.add_unit(
+            "mm^2",
+            "square_millimeter",
+            Dimension::LENGTH.pow(2),
+            1e-6,
+            0.0,
+        );
+        self.add_unit(
+            "ft^2",
+            "square_foot",
+            Dimension::LENGTH.pow(2),
+            0.3048 * 0.3048,
+            0.0,
+        );
+        self.add_unit(
+            "in^2",
+            "square_inch",
+            Dimension::LENGTH.pow(2),
+            0.0254 * 0.0254,
+            0.0,
+        );
         self.add_unit("L", "liter", Dimension::LENGTH.pow(3), 0.001, 0.0);
         self.add_unit("mL", "milliliter", Dimension::LENGTH.pow(3), 1e-6, 0.0);
     }
@@ -216,15 +387,17 @@ impl UnitRegistry {
             let num_part = &clean[..slash_idx];
             let den_part = &clean[slash_idx + 1..];
             if let (Some(num_def), Some(den_def)) = (self.lookup(num_part), self.lookup(den_part))
-                && num_def.offset == 0.0 && den_def.offset == 0.0 {
-                    return Some(UnitDefinition {
-                        symbol: clean.to_string(),
-                        name: clean.to_string(),
-                        dimension: num_def.dimension - den_def.dimension,
-                        scale: num_def.scale / den_def.scale,
-                        offset: 0.0,
-                    });
-                }
+                && num_def.offset == 0.0
+                && den_def.offset == 0.0
+            {
+                return Some(UnitDefinition {
+                    symbol: clean.to_string(),
+                    name: clean.to_string(),
+                    dimension: num_def.dimension - den_def.dimension,
+                    scale: num_def.scale / den_def.scale,
+                    offset: 0.0,
+                });
+            }
         }
 
         // Check for compound power units: e.g. m^2, s^3
@@ -233,15 +406,16 @@ impl UnitRegistry {
             let exp_part = &clean[caret_idx + 1..];
             if let Ok(exp) = exp_part.parse::<i8>()
                 && let Some(base_def) = self.lookup(base_part)
-                    && base_def.offset == 0.0 {
-                        return Some(UnitDefinition {
-                            symbol: clean.to_string(),
-                            name: clean.to_string(),
-                            dimension: base_def.dimension.pow(exp),
-                            scale: base_def.scale.powi(exp as i32),
-                            offset: 0.0,
-                        });
-                    }
+                && base_def.offset == 0.0
+            {
+                return Some(UnitDefinition {
+                    symbol: clean.to_string(),
+                    name: clean.to_string(),
+                    dimension: base_def.dimension.pow(exp),
+                    scale: base_def.scale.powi(exp as i32),
+                    offset: 0.0,
+                });
+            }
         }
 
         // Check for compound product units: e.g. kg*m, N*s
@@ -249,15 +423,17 @@ impl UnitRegistry {
             let p1 = &clean[..star_idx];
             let p2 = &clean[star_idx + 1..];
             if let (Some(d1), Some(d2)) = (self.lookup(p1), self.lookup(p2))
-                && d1.offset == 0.0 && d2.offset == 0.0 {
-                    return Some(UnitDefinition {
-                        symbol: clean.to_string(),
-                        name: clean.to_string(),
-                        dimension: d1.dimension + d2.dimension,
-                        scale: d1.scale * d2.scale,
-                        offset: 0.0,
-                    });
-                }
+                && d1.offset == 0.0
+                && d2.offset == 0.0
+            {
+                return Some(UnitDefinition {
+                    symbol: clean.to_string(),
+                    name: clean.to_string(),
+                    dimension: d1.dimension + d2.dimension,
+                    scale: d1.scale * d2.scale,
+                    offset: 0.0,
+                });
+            }
         }
 
         // Try standard metric prefixes on base units
@@ -278,15 +454,16 @@ impl UnitRegistry {
             if clean.starts_with(pfx) && clean.len() > pfx.len() {
                 let remainder = &clean[pfx.len()..];
                 if let Some(base_def) = self.units.get(remainder)
-                    && base_def.offset == 0.0 {
-                        return Some(UnitDefinition {
-                            symbol: clean.to_string(),
-                            name: format!("{}{}", pfx, base_def.name),
-                            dimension: base_def.dimension,
-                            scale: base_def.scale * mult,
-                            offset: 0.0,
-                        });
-                    }
+                    && base_def.offset == 0.0
+                {
+                    return Some(UnitDefinition {
+                        symbol: clean.to_string(),
+                        name: format!("{}{}", pfx, base_def.name),
+                        dimension: base_def.dimension,
+                        scale: base_def.scale * mult,
+                        offset: 0.0,
+                    });
+                }
             }
         }
 
@@ -295,10 +472,17 @@ impl UnitRegistry {
 
     /// Converts a value from one unit to another.
     /// Checks dimensional consistency strictly (Numbat principle).
-    pub fn convert(&self, value: f64, from_unit_name: &str, to_unit_name: &str) -> Result<f64, String> {
-        let from = self.lookup(from_unit_name)
+    pub fn convert(
+        &self,
+        value: f64,
+        from_unit_name: &str,
+        to_unit_name: &str,
+    ) -> Result<f64, String> {
+        let from = self
+            .lookup(from_unit_name)
             .ok_or_else(|| format!("Unknown unit: '{}'", from_unit_name))?;
-        let to = self.lookup(to_unit_name)
+        let to = self
+            .lookup(to_unit_name)
             .ok_or_else(|| format!("Unknown unit: '{}'", to_unit_name))?;
 
         if from.dimension != to.dimension {

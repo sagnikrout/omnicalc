@@ -20,22 +20,28 @@ impl Quantity {
         }
     }
 
-    pub fn from_unit(value: NumericValue, unit_name: &str, registry: &UnitRegistry) -> Result<Self, String> {
-        let def = registry.lookup(unit_name)
+    pub fn from_unit(
+        value: NumericValue,
+        unit_name: &str,
+        registry: &UnitRegistry,
+    ) -> Result<Self, String> {
+        let def = registry
+            .lookup(unit_name)
             .ok_or_else(|| format!("Unknown unit: '{}'", unit_name))?;
 
         // Base SI value calculation
         let raw_f = value.to_f64();
         let base_f = (raw_f + def.offset) * def.scale;
-        
+
         let val = match value {
-            NumericValue::Uncertainty { error, .. } => {
-                NumericValue::Uncertainty {
-                    nominal: base_f,
-                    error: error * def.scale,
-                }
-            }
-            NumericValue::Exact(_) if def.offset == 0.0 && (def.scale.fract() == 0.0 || (1.0 / def.scale).fract() == 0.0) => {
+            NumericValue::Uncertainty { error, .. } => NumericValue::Uncertainty {
+                nominal: base_f,
+                error: error * def.scale,
+            },
+            NumericValue::Exact(_)
+                if def.offset == 0.0
+                    && (def.scale.fract() == 0.0 || (1.0 / def.scale).fract() == 0.0) =>
+            {
                 value * NumericValue::from_f64(def.scale)
             }
             _ => NumericValue::from_f64(base_f),
@@ -49,13 +55,17 @@ impl Quantity {
     }
 
     pub fn to_unit(&self, target_unit_name: &str, registry: &UnitRegistry) -> Result<Self, String> {
-        let target = registry.lookup(target_unit_name)
+        let target = registry
+            .lookup(target_unit_name)
             .ok_or_else(|| format!("Unknown target unit: '{}'", target_unit_name))?;
 
         if self.dimension != target.dimension {
             return Err(format!(
                 "Dimensional mismatch: cannot convert {} ({}) to '{}' ({})",
-                self.format_plain(), self.dimension, target_unit_name, target.dimension
+                self.format_plain(),
+                self.dimension,
+                target_unit_name,
+                target.dimension
             ));
         }
 
@@ -63,12 +73,10 @@ impl Quantity {
         let target_f = (base_f / target.scale) - target.offset;
 
         let res_val = match &self.value {
-            NumericValue::Uncertainty { error, .. } => {
-                NumericValue::Uncertainty {
-                    nominal: target_f,
-                    error: error / target.scale,
-                }
-            }
+            NumericValue::Uncertainty { error, .. } => NumericValue::Uncertainty {
+                nominal: target_f,
+                error: error / target.scale,
+            },
             _ => NumericValue::from_f64(target_f),
         };
 
@@ -89,18 +97,19 @@ impl Quantity {
     pub fn format_with_registry(&self, registry: &UnitRegistry) -> String {
         if let Some(ref u) = self.unit_str {
             if let Some(def) = registry.lookup(u)
-                && (def.offset != 0.0 || (def.scale != 1.0 && def.scale > 0.0)) {
-                    let base_f = self.value.to_f64();
-                    let display_f = (base_f / def.scale) - def.offset;
-                    let display_val = match &self.value {
-                        NumericValue::Uncertainty { error, .. } => NumericValue::Uncertainty {
-                            nominal: display_f,
-                            error: error / def.scale,
-                        },
-                        _ => NumericValue::from_f64(display_f),
-                    };
-                    return format!("{} {}", display_val, u);
-                }
+                && (def.offset != 0.0 || (def.scale != 1.0 && def.scale > 0.0))
+            {
+                let base_f = self.value.to_f64();
+                let display_f = (base_f / def.scale) - def.offset;
+                let display_val = match &self.value {
+                    NumericValue::Uncertainty { error, .. } => NumericValue::Uncertainty {
+                        nominal: display_f,
+                        error: error / def.scale,
+                    },
+                    _ => NumericValue::from_f64(display_f),
+                };
+                return format!("{} {}", display_val, u);
+            }
             format!("{} {}", self.value, u)
         } else if self.dimension.is_dimensionless() {
             format!("{}", self.value)
@@ -145,6 +154,13 @@ impl Quantity {
     }
 }
 
+fn is_affine_temp(unit: Option<&str>) -> bool {
+    matches!(
+        unit,
+        Some("degC" | "degF" | "°C" | "°F" | "celsius" | "fahrenheit")
+    )
+}
+
 impl Add for Quantity {
     type Output = Result<Quantity, String>;
     fn add(self, rhs: Self) -> Self::Output {
@@ -153,6 +169,25 @@ impl Add for Quantity {
                 "Type error: Dimensional mismatch in addition ({} vs {})",
                 self.dimension, rhs.dimension
             ));
+        }
+        if self.dimension == Dimension::TEMPERATURE {
+            let is_self_affine = is_affine_temp(self.unit_str.as_deref());
+            let is_rhs_affine = is_affine_temp(rhs.unit_str.as_deref());
+            if is_self_affine && is_rhs_affine {
+                return Err("Cannot add two affine temperatures (e.g. degC + degC). To offset a temperature, add a temperature difference in Kelvin.".to_string());
+            }
+            let unit_str = if is_self_affine {
+                self.unit_str
+            } else if is_rhs_affine {
+                rhs.unit_str
+            } else {
+                self.unit_str.or(rhs.unit_str)
+            };
+            return Ok(Quantity {
+                value: self.value + rhs.value,
+                dimension: self.dimension,
+                unit_str,
+            });
         }
         Ok(Quantity {
             value: self.value + rhs.value,
@@ -170,6 +205,30 @@ impl Sub for Quantity {
                 "Type error: Dimensional mismatch in subtraction ({} vs {})",
                 self.dimension, rhs.dimension
             ));
+        }
+        if self.dimension == Dimension::TEMPERATURE {
+            let is_self_affine = is_affine_temp(self.unit_str.as_deref());
+            let is_rhs_affine = is_affine_temp(rhs.unit_str.as_deref());
+            if is_self_affine && is_rhs_affine {
+                // Difference between two absolute temperatures is a temperature interval (in Kelvin)
+                return Ok(Quantity {
+                    value: self.value - rhs.value,
+                    dimension: Dimension::TEMPERATURE,
+                    unit_str: Some("K".to_string()),
+                });
+            } else if is_self_affine && !is_rhs_affine {
+                // e.g. 20 degC - 5 K = 15 degC
+                return Ok(Quantity {
+                    value: self.value - rhs.value,
+                    dimension: self.dimension,
+                    unit_str: self.unit_str,
+                });
+            } else if !is_self_affine && is_rhs_affine {
+                return Err(
+                    "Cannot subtract an absolute temperature from a temperature difference."
+                        .to_string(),
+                );
+            }
         }
         Ok(Quantity {
             value: self.value - rhs.value,

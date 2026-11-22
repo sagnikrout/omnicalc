@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    name: Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Check code formatting
+        run: cargo fmt --check
+
+      - name: Lint with Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Run unit and integration tests
+        run: cargo test --verbose
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Run Master Destructive Test Suite
+        run: |
+          chmod +x destructive_test.sh
+          OMNICALC_BIN=./target/release/omnicalc ./destructive_test.sh
+
+      - name: Verify script syntax
+        run: |
+          bash -n package.sh
+          bash -n destructive_test.sh
+          python3 -m py_compile benchmark_comparison.py

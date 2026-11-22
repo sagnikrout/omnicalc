@@ -2,15 +2,17 @@ use clap::Parser;
 use omnicalc::eval::Evaluator;
 use omnicalc::lexer::Lexer;
 use omnicalc::parser::Parser as CalcParser;
-use rustyline::error::ReadlineError;
 use rustyline::DefaultEditor;
+use rustyline::error::ReadlineError;
 use std::io::{self, BufRead, IsTerminal};
 
 #[derive(Parser, Debug)]
 #[command(name = "omnicalc")]
 #[command(author = "Sagnik Rout & Gemini 3.8 Flash High (Google DeepMind)")]
 #[command(version = env!("CARGO_PKG_VERSION"))]
-#[command(about = "Unified high-performance scientific CLI calculator & CAS (https://github.com/sagnikrout/omnicalc)")]
+#[command(
+    about = "Unified high-performance scientific CLI calculator & CAS (https://github.com/sagnikrout/omnicalc)"
+)]
 struct Args {
     /// Expression to evaluate directly
     #[arg(short = 'e', long = "eval", allow_hyphen_values = true)]
@@ -37,7 +39,12 @@ struct Args {
     about: bool,
 }
 
-fn evaluate_str(evaluator: &mut Evaluator, input: &str, raw: bool, base_code: u32) -> Result<String, String> {
+fn evaluate_str(
+    evaluator: &mut Evaluator,
+    input: &str,
+    raw: bool,
+    base_code: u32,
+) -> Result<String, String> {
     let clean = input.trim();
     if clean.is_empty() {
         return Err("Empty input".to_string());
@@ -126,9 +133,16 @@ fn main() {
     }
 
     // Interactive REPL mode
-    println!("omnicalc v{} — Unified CLI Scientific & Physical Engine", env!("CARGO_PKG_VERSION"));
-    println!("Origin: Sagnik Rout (https://github.com/sagnikrout/omnicalc) | Synthesis: Gemini 3.8 Flash High");
-    println!("Synthesis: qalc (CAS/Uncertainty) + Numbat (Dimensional Safety) + fend (Ergonomics) + Kalker (Math Syntax)");
+    println!(
+        "omnicalc v{} — Unified CLI Scientific & Physical Engine",
+        env!("CARGO_PKG_VERSION")
+    );
+    println!(
+        "Origin: Sagnik Rout (https://github.com/sagnikrout/omnicalc) | Synthesis: Gemini 3.8 Flash High"
+    );
+    println!(
+        "Synthesis: qalc (CAS/Uncertainty) + Numbat (Dimensional Safety) + fend (Ergonomics) + Kalker (Math Syntax)"
+    );
     println!("Type 'quit' or 'exit' or press Ctrl-D to exit.\n");
 
     let mut rl = match DefaultEditor::new() {
@@ -201,13 +215,25 @@ fn print_credits() {
     println!("  and zero-handwaving engineering standards.\n");
     println!("=== Standing on the Shoulders of Giants ===");
     println!("  We express deep gratitude to the creators and maintainers of the open-source");
-    println!("  scientific tools whose years of work established the foundation for modern CLI math:");
-    println!("  - Qalculate! / libqalculate (Niklas Knutsson & contributors) — CAS, dimensional units, uncertainty.");
-    println!("  - Numbat (David Peter / @sharkdp & contributors) — Rigorous static physical dimension typing.");
-    println!("  - fend (Evan Jones / @printfn & contributors) — Exact rational AST, elegant CLI ergonomics.");
-    println!("  - kalker (PaddiM8 & contributors) — Pure mathematical syntax, complex roots, matrices.");
+    println!(
+        "  scientific tools whose years of work established the foundation for modern CLI math:"
+    );
+    println!(
+        "  - Qalculate! / libqalculate (Niklas Knutsson & contributors) — CAS, dimensional units, uncertainty."
+    );
+    println!(
+        "  - Numbat (David Peter / @sharkdp & contributors) — Rigorous static physical dimension typing."
+    );
+    println!(
+        "  - fend (Evan Jones / @printfn & contributors) — Exact rational AST, elegant CLI ergonomics."
+    );
+    println!(
+        "  - kalker (PaddiM8 & contributors) — Pure mathematical syntax, complex roots, matrices."
+    );
     println!("  - Insect (David Peter) — The web/CLI physical unit predecessor.");
-    println!("  - calc / apcalc (David I. Bell, Landon Curt Noll) — C-based arbitrary precision pioneer since the 1990s.\n");
+    println!(
+        "  - calc / apcalc (David I. Bell, Landon Curt Noll) — C-based arbitrary precision pioneer since the 1990s.\n"
+    );
     println!("=== Mathematical Foundations ===");
     println!("  Dedicated to the mathematicians whose theorems power this engine:");
     println!("  Leonhard Euler, Isaac Newton, Joseph Raphson, Carl Friedrich Gauss,");

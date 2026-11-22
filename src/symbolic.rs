@@ -30,7 +30,11 @@ pub fn diff(expr: &Expr, var: &str) -> Expr {
             let dr = diff(rhs, var);
             let term1 = Expr::Binary(Box::new(dl), BinaryOp::Mul, rhs.clone());
             let term2 = Expr::Binary(lhs.clone(), BinaryOp::Mul, Box::new(dr));
-            simplify(&Expr::Binary(Box::new(term1), BinaryOp::Add, Box::new(term2)))
+            simplify(&Expr::Binary(
+                Box::new(term1),
+                BinaryOp::Add,
+                Box::new(term2),
+            ))
         }
         Expr::Binary(lhs, BinaryOp::Div, rhs) => {
             // Quotient rule: d(u/v) = (u'*v - u*v') / v^2
@@ -60,7 +64,11 @@ pub fn diff(expr: &Expr, var: &str) -> Expr {
                 let n_u_p = Expr::Binary(
                     rhs.clone(),
                     BinaryOp::Mul,
-                    Box::new(Expr::Binary(lhs.clone(), BinaryOp::Pow, Box::new(simplify(&p_minus_1)))),
+                    Box::new(Expr::Binary(
+                        lhs.clone(),
+                        BinaryOp::Pow,
+                        Box::new(simplify(&p_minus_1)),
+                    )),
                 );
                 simplify(&Expr::Binary(Box::new(n_u_p), BinaryOp::Mul, Box::new(dl)))
             } else {
@@ -124,7 +132,11 @@ pub fn diff(expr: &Expr, var: &str) -> Expr {
                 }
                 "tan" => {
                     let cos_u = Expr::Call("cos".to_string(), vec![u.clone()]);
-                    let cos_sq = Expr::Binary(Box::new(cos_u), BinaryOp::Pow, Box::new(Expr::Number(NumericValue::from_i64(2))));
+                    let cos_sq = Expr::Binary(
+                        Box::new(cos_u),
+                        BinaryOp::Pow,
+                        Box::new(Expr::Number(NumericValue::from_i64(2))),
+                    );
                     let d = Expr::Binary(Box::new(du), BinaryOp::Div, Box::new(cos_sq));
                     simplify(&d)
                 }
@@ -146,23 +158,47 @@ pub fn diff(expr: &Expr, var: &str) -> Expr {
                     simplify(&d)
                 }
                 "asin" => {
-                    let u_sq = Expr::Binary(Box::new(u.clone()), BinaryOp::Pow, Box::new(Expr::Number(NumericValue::from_i64(2))));
-                    let one_minus = Expr::Binary(Box::new(Expr::Number(NumericValue::from_i64(1))), BinaryOp::Sub, Box::new(u_sq));
+                    let u_sq = Expr::Binary(
+                        Box::new(u.clone()),
+                        BinaryOp::Pow,
+                        Box::new(Expr::Number(NumericValue::from_i64(2))),
+                    );
+                    let one_minus = Expr::Binary(
+                        Box::new(Expr::Number(NumericValue::from_i64(1))),
+                        BinaryOp::Sub,
+                        Box::new(u_sq),
+                    );
                     let denom = Expr::Call("sqrt".to_string(), vec![one_minus]);
                     let d = Expr::Binary(Box::new(du), BinaryOp::Div, Box::new(denom));
                     simplify(&d)
                 }
                 "acos" => {
-                    let u_sq = Expr::Binary(Box::new(u.clone()), BinaryOp::Pow, Box::new(Expr::Number(NumericValue::from_i64(2))));
-                    let one_minus = Expr::Binary(Box::new(Expr::Number(NumericValue::from_i64(1))), BinaryOp::Sub, Box::new(u_sq));
+                    let u_sq = Expr::Binary(
+                        Box::new(u.clone()),
+                        BinaryOp::Pow,
+                        Box::new(Expr::Number(NumericValue::from_i64(2))),
+                    );
+                    let one_minus = Expr::Binary(
+                        Box::new(Expr::Number(NumericValue::from_i64(1))),
+                        BinaryOp::Sub,
+                        Box::new(u_sq),
+                    );
                     let denom = Expr::Call("sqrt".to_string(), vec![one_minus]);
                     let neg_du = Expr::Unary(UnaryOp::Neg, Box::new(du));
                     let d = Expr::Binary(Box::new(neg_du), BinaryOp::Div, Box::new(denom));
                     simplify(&d)
                 }
                 "atan" => {
-                    let u_sq = Expr::Binary(Box::new(u.clone()), BinaryOp::Pow, Box::new(Expr::Number(NumericValue::from_i64(2))));
-                    let one_plus = Expr::Binary(Box::new(Expr::Number(NumericValue::from_i64(1))), BinaryOp::Add, Box::new(u_sq));
+                    let u_sq = Expr::Binary(
+                        Box::new(u.clone()),
+                        BinaryOp::Pow,
+                        Box::new(Expr::Number(NumericValue::from_i64(2))),
+                    );
+                    let one_plus = Expr::Binary(
+                        Box::new(Expr::Number(NumericValue::from_i64(1))),
+                        BinaryOp::Add,
+                        Box::new(u_sq),
+                    );
                     let d = Expr::Binary(Box::new(du), BinaryOp::Div, Box::new(one_plus));
                     simplify(&d)
                 }
@@ -181,7 +217,9 @@ pub fn has_variable(expr: &Expr, var: &str) -> bool {
         Expr::Binary(lhs, _, rhs) => has_variable(lhs, var) || has_variable(rhs, var),
         Expr::Call(_, args) => args.iter().any(|a| has_variable(a, var)),
         Expr::Convert { expr, .. } | Expr::ToBase { expr, .. } => has_variable(expr, var),
-        Expr::Uncertainty { nominal, error } => has_variable(nominal, var) || has_variable(error, var),
+        Expr::Uncertainty { nominal, error } => {
+            has_variable(nominal, var) || has_variable(error, var)
+        }
         Expr::Equation { lhs, rhs } => has_variable(lhs, var) || has_variable(rhs, var),
     }
 }
@@ -207,7 +245,9 @@ pub fn simplify(expr: &Expr) -> Expr {
                 (Expr::Number(a), BinaryOp::Add, Expr::Number(b)) => Expr::Number(a + b),
                 (Expr::Number(a), BinaryOp::Sub, Expr::Number(b)) => Expr::Number(a - b),
                 (Expr::Number(a), BinaryOp::Mul, Expr::Number(b)) => Expr::Number(a * b),
-                (Expr::Number(a), BinaryOp::Div, Expr::Number(b)) if !b.is_zero() => Expr::Number(a / b),
+                (Expr::Number(a), BinaryOp::Div, Expr::Number(b)) if !b.is_zero() => {
+                    Expr::Number(a / b)
+                }
                 (Expr::Number(a), BinaryOp::Pow, Expr::Number(b)) => Expr::Number(a.pow(&b)),
 
                 // Algebraic identities: Addition
@@ -219,8 +259,12 @@ pub fn simplify(expr: &Expr) -> Expr {
                 (l, BinaryOp::Sub, r) if l == r => Expr::Number(NumericValue::from_i64(0)),
 
                 // Algebraic identities: Multiplication
-                (Expr::Number(n), BinaryOp::Mul, _) if n.is_zero() => Expr::Number(NumericValue::from_i64(0)),
-                (_, BinaryOp::Mul, Expr::Number(n)) if n.is_zero() => Expr::Number(NumericValue::from_i64(0)),
+                (Expr::Number(n), BinaryOp::Mul, _) if n.is_zero() => {
+                    Expr::Number(NumericValue::from_i64(0))
+                }
+                (_, BinaryOp::Mul, Expr::Number(n)) if n.is_zero() => {
+                    Expr::Number(NumericValue::from_i64(0))
+                }
                 (Expr::Number(n), BinaryOp::Mul, other) if n.is_one() => other,
                 (other, BinaryOp::Mul, Expr::Number(n)) if n.is_one() => other,
 
@@ -233,12 +277,18 @@ pub fn simplify(expr: &Expr) -> Expr {
                             box_r,
                         ))
                     } else {
-                        Expr::Binary(Box::new(Expr::Number(c1)), BinaryOp::Mul, Box::new(Expr::Binary(box_l, BinaryOp::Mul, box_r)))
+                        Expr::Binary(
+                            Box::new(Expr::Number(c1)),
+                            BinaryOp::Mul,
+                            Box::new(Expr::Binary(box_l, BinaryOp::Mul, box_r)),
+                        )
                     }
                 }
 
                 // Power identities
-                (_, BinaryOp::Pow, Expr::Number(n)) if n.is_zero() => Expr::Number(NumericValue::from_i64(1)),
+                (_, BinaryOp::Pow, Expr::Number(n)) if n.is_zero() => {
+                    Expr::Number(NumericValue::from_i64(1))
+                }
                 (other, BinaryOp::Pow, Expr::Number(n)) if n.is_one() => other,
 
                 (l, op, r) => Expr::Binary(Box::new(l), op, Box::new(r)),
@@ -257,9 +307,10 @@ pub fn format_symbolic(expr: &Expr) -> String {
         Expr::Binary(lhs, BinaryOp::Mul, rhs) => {
             // Check for concise coefficient format e.g. 12x
             if let Expr::Number(n) = &**lhs
-                && let Expr::Variable(v) | Expr::Unit(v) = &**rhs {
-                    return format!("{}{}", n, v);
-                }
+                && let Expr::Variable(v) | Expr::Unit(v) = &**rhs
+            {
+                return format!("{}{}", n, v);
+            }
             format!("{} * {}", format_symbolic(lhs), format_symbolic(rhs))
         }
         Expr::Binary(lhs, op, rhs) => {
@@ -270,6 +321,54 @@ pub fn format_symbolic(expr: &Expr) -> String {
             format!("{}({})", name, formatted_args.join(", "))
         }
         _ => format!("{:?}", expr),
+    }
+}
+
+pub fn detect_equation_variable(lhs: &Expr, rhs: &Expr) -> String {
+    let mut vars = Vec::new();
+    collect_variables(lhs, &mut vars);
+    collect_variables(rhs, &mut vars);
+    if vars.contains(&"x".to_string()) {
+        "x".to_string()
+    } else if let Some(first) = vars.into_iter().next() {
+        first
+    } else {
+        "x".to_string()
+    }
+}
+
+fn collect_variables(expr: &Expr, vars: &mut Vec<String>) {
+    match expr {
+        Expr::Variable(v) => {
+            if !vars.contains(v) {
+                vars.push(v.clone());
+            }
+        }
+        Expr::Unit(u) => {
+            if !matches!(u.as_str(), "pi" | "tau" | "phi" | "e" | "c" | "i") && !vars.contains(u) {
+                vars.push(u.clone());
+            }
+        }
+        Expr::Unary(_, inner) => collect_variables(inner, vars),
+        Expr::Binary(lhs, _, rhs) => {
+            collect_variables(lhs, vars);
+            collect_variables(rhs, vars);
+        }
+        Expr::Call(_, args) => {
+            for a in args {
+                collect_variables(a, vars);
+            }
+        }
+        Expr::Convert { expr, .. } | Expr::ToBase { expr, .. } => collect_variables(expr, vars),
+        Expr::Uncertainty { nominal, error } => {
+            collect_variables(nominal, vars);
+            collect_variables(error, vars);
+        }
+        Expr::Equation { lhs, rhs } => {
+            collect_variables(lhs, vars);
+            collect_variables(rhs, vars);
+        }
+        _ => {}
     }
 }
 
@@ -293,18 +392,25 @@ pub fn solve_equation(lhs: &Expr, rhs: &Expr, var: &str) -> Result<String, Strin
             // a = d1
             if let Expr::Number(a) = d1 {
                 if a.is_zero() {
-                    return Err("Equation has no unique solution (degenerate).".to_string());
+                    let b = eval_with_var(&diff_expr, var, 0.0)?;
+                    if b.abs() < 1e-12 {
+                        return Ok(
+                            "Identity: all real numbers satisfy this equation (0 = 0)".to_string()
+                        );
+                    } else {
+                        return Err("Contradiction: equation has no solution".to_string());
+                    }
                 }
                 // Evaluate diff_expr at var = 0 to get b
-                let b = eval_with_var(&diff_expr, var, 0.0);
+                let b = eval_with_var(&diff_expr, var, 0.0)?;
                 let x_val = -b / a.to_f64();
                 return Ok(format!("{} = {}", var, x_val));
             }
         } else {
             // Exact quadratic equation: ax^2 + bx + c = 0
             let a = n.to_f64() / 2.0;
-            let b = eval_with_var(&d1, var, 0.0);
-            let c = eval_with_var(&diff_expr, var, 0.0);
+            let b = eval_with_var(&d1, var, 0.0)?;
+            let c = eval_with_var(&diff_expr, var, 0.0)?;
             let disc = b * b - 4.0 * a * c;
             if disc < 0.0 {
                 return Err("No real solution (discriminant < 0)".to_string());
@@ -324,35 +430,83 @@ pub fn solve_equation(lhs: &Expr, rhs: &Expr, var: &str) -> Result<String, Strin
     Ok(format!("{} ≈ {:.6}", var, root))
 }
 
-fn eval_with_var(expr: &Expr, var: &str, val: f64) -> f64 {
+fn eval_with_var(expr: &Expr, var: &str, val: f64) -> Result<f64, String> {
     match expr {
-        Expr::Number(n) => n.to_f64(),
-        Expr::Variable(v) | Expr::Unit(v) if v == var => val,
-        Expr::Unary(UnaryOp::Neg, inner) => -eval_with_var(inner, var, val),
-        Expr::Binary(lhs, BinaryOp::Add, rhs) => eval_with_var(lhs, var, val) + eval_with_var(rhs, var, val),
-        Expr::Binary(lhs, BinaryOp::Sub, rhs) => eval_with_var(lhs, var, val) - eval_with_var(rhs, var, val),
-        Expr::Binary(lhs, BinaryOp::Mul, rhs) => eval_with_var(lhs, var, val) * eval_with_var(rhs, var, val),
-        Expr::Binary(lhs, BinaryOp::Div, rhs) => eval_with_var(lhs, var, val) / eval_with_var(rhs, var, val),
-        Expr::Binary(lhs, BinaryOp::Pow, rhs) => eval_with_var(lhs, var, val).powf(eval_with_var(rhs, var, val)),
+        Expr::Number(n) => Ok(n.to_f64()),
+        Expr::Variable(v) | Expr::Unit(v) if v == var => Ok(val),
+        Expr::Variable(v) | Expr::Unit(v) => Err(format!("Unknown variable '{}' in evaluation", v)),
+        Expr::Unary(UnaryOp::Neg, inner) => Ok(-eval_with_var(inner, var, val)?),
+        Expr::Binary(lhs, BinaryOp::Add, rhs) => {
+            Ok(eval_with_var(lhs, var, val)? + eval_with_var(rhs, var, val)?)
+        }
+        Expr::Binary(lhs, BinaryOp::Sub, rhs) => {
+            Ok(eval_with_var(lhs, var, val)? - eval_with_var(rhs, var, val)?)
+        }
+        Expr::Binary(lhs, BinaryOp::Mul, rhs) => {
+            Ok(eval_with_var(lhs, var, val)? * eval_with_var(rhs, var, val)?)
+        }
+        Expr::Binary(lhs, BinaryOp::Div, rhs) => {
+            let d = eval_with_var(rhs, var, val)?;
+            if d.abs() < 1e-15 {
+                return Err("Division by zero in function evaluation".to_string());
+            }
+            Ok(eval_with_var(lhs, var, val)? / d)
+        }
+        Expr::Binary(lhs, BinaryOp::Pow, rhs) => {
+            Ok(eval_with_var(lhs, var, val)?.powf(eval_with_var(rhs, var, val)?))
+        }
         Expr::Call(name, args) => {
-            let eval_args: Vec<f64> = args.iter().map(|a| eval_with_var(a, var, val)).collect();
+            let mut eval_args = Vec::with_capacity(args.len());
+            for a in args {
+                eval_args.push(eval_with_var(a, var, val)?);
+            }
             match name.as_str() {
-                "sin" if eval_args.len() == 1 => eval_args[0].sin(),
-                "cos" if eval_args.len() == 1 => eval_args[0].cos(),
-                "tan" if eval_args.len() == 1 => eval_args[0].tan(),
-                "asin" if eval_args.len() == 1 => eval_args[0].asin(),
-                "acos" if eval_args.len() == 1 => eval_args[0].acos(),
-                "atan" if eval_args.len() == 1 => eval_args[0].atan(),
-                "exp" if eval_args.len() == 1 => eval_args[0].exp(),
-                "ln" if eval_args.len() == 1 => eval_args[0].ln(),
-                "log" | "log10" if eval_args.len() == 1 => eval_args[0].log10(),
-                "sqrt" if eval_args.len() == 1 => eval_args[0].sqrt(),
-                "cbrt" if eval_args.len() == 1 => eval_args[0].cbrt(),
-                "abs" if eval_args.len() == 1 => eval_args[0].abs(),
-                _ => 0.0,
+                "sin" if eval_args.len() == 1 => Ok(eval_args[0].sin()),
+                "cos" if eval_args.len() == 1 => Ok(eval_args[0].cos()),
+                "tan" if eval_args.len() == 1 => Ok(eval_args[0].tan()),
+                "asin" if eval_args.len() == 1 => {
+                    let x = eval_args[0];
+                    if !(-1.0..=1.0).contains(&x) {
+                        return Err(format!("Domain error in asin({})", x));
+                    }
+                    Ok(x.asin())
+                }
+                "acos" if eval_args.len() == 1 => {
+                    let x = eval_args[0];
+                    if !(-1.0..=1.0).contains(&x) {
+                        return Err(format!("Domain error in acos({})", x));
+                    }
+                    Ok(x.acos())
+                }
+                "atan" if eval_args.len() == 1 => Ok(eval_args[0].atan()),
+                "exp" if eval_args.len() == 1 => Ok(eval_args[0].exp()),
+                "ln" if eval_args.len() == 1 => {
+                    if eval_args[0] <= 0.0 {
+                        return Err(format!("Domain error in ln({})", eval_args[0]));
+                    }
+                    Ok(eval_args[0].ln())
+                }
+                "log" | "log10" if eval_args.len() == 1 => {
+                    if eval_args[0] <= 0.0 {
+                        return Err(format!("Domain error in log10({})", eval_args[0]));
+                    }
+                    Ok(eval_args[0].log10())
+                }
+                "sqrt" if eval_args.len() == 1 => {
+                    if eval_args[0] < 0.0 {
+                        return Err(format!("Domain error in sqrt({})", eval_args[0]));
+                    }
+                    Ok(eval_args[0].sqrt())
+                }
+                "cbrt" if eval_args.len() == 1 => Ok(eval_args[0].cbrt()),
+                "abs" if eval_args.len() == 1 => Ok(eval_args[0].abs()),
+                _ => Err(format!("Unsupported function '{}' in root finder", name)),
             }
         }
-        _ => 0.0,
+        _ => Err(format!(
+            "Unsupported expression node '{:?}' in equation evaluation",
+            expr
+        )),
     }
 }
 
@@ -361,25 +515,25 @@ pub fn find_numerical_root(expr: &Expr, var: &str, init_guess: f64) -> Result<f6
     let d_expr = diff(expr, var);
 
     for _ in 0..100 {
-        let fx = eval_with_var(expr, var, x);
+        let fx = eval_with_var(expr, var, x)?;
         if fx.abs() < 1e-12 {
             return Ok(if x.abs() < 1e-10 { 0.0 } else { x });
         }
-        let dfx = eval_with_var(&d_expr, var, x);
+        let dfx = eval_with_var(&d_expr, var, x)?;
         if dfx.abs() < 1e-15 {
             x += 0.1; // perturbation
             continue;
         }
         let next_x = x - fx / dfx;
         if (next_x - x).abs() < 1e-12 {
-            let final_check = eval_with_var(expr, var, next_x);
+            let final_check = eval_with_var(expr, var, next_x)?;
             if final_check.abs() < 1e-5 {
                 return Ok(if next_x.abs() < 1e-10 { 0.0 } else { next_x });
             }
         }
         x = next_x;
     }
-    let final_fx = eval_with_var(expr, var, x);
+    let final_fx = eval_with_var(expr, var, x)?;
     if final_fx.abs() < 1e-5 {
         Ok(if x.abs() < 1e-10 { 0.0 } else { x })
     } else {
@@ -415,7 +569,13 @@ pub fn factor_polynomial(expr: &Expr, var: &str) -> String {
             }
             let factor_strs: Vec<String> = factors
                 .iter()
-                .map(|(p, c)| if *c == 1 { format!("{}", p) } else { format!("{}^{}", p, c) })
+                .map(|(p, c)| {
+                    if *c == 1 {
+                        format!("{}", p)
+                    } else {
+                        format!("{}^{}", p, c)
+                    }
+                })
                 .collect();
             return factor_strs.join(" * ");
         }
@@ -428,27 +588,27 @@ pub fn factor_polynomial(expr: &Expr, var: &str) -> String {
         let a = a2.to_f64() / 2.0;
         if a != 0.0 {
             // Find b = d1(0)
-            let b = eval_with_var(&d1, var, 0.0);
-            let c = eval_with_var(expr, var, 0.0);
-            let disc = b * b - 4.0 * a * c;
-            if disc >= 0.0 {
-                let r1 = (-b + disc.sqrt()) / (2.0 * a);
-                let r2 = (-b - disc.sqrt()) / (2.0 * a);
-                let fmt_r = |r: f64| -> String {
-                    if r > 0.0 {
-                        format!("({} - {})", var, r)
-                    } else if r < 0.0 {
-                        format!("({} + {})", var, -r)
+            if let (Ok(b), Ok(c)) = (eval_with_var(&d1, var, 0.0), eval_with_var(expr, var, 0.0)) {
+                let disc = b * b - 4.0 * a * c;
+                if disc >= 0.0 {
+                    let r1 = (-b + disc.sqrt()) / (2.0 * a);
+                    let r2 = (-b - disc.sqrt()) / (2.0 * a);
+                    let fmt_r = |r: f64| -> String {
+                        if r > 0.0 {
+                            format!("({} - {})", var, r)
+                        } else if r < 0.0 {
+                            format!("({} + {})", var, -r)
+                        } else {
+                            var.to_string()
+                        }
+                    };
+                    if (r1 - r2).abs() < 1e-10 {
+                        return format!("{}^2", fmt_r(r1));
+                    } else if a == 1.0 {
+                        return format!("{}{}", fmt_r(r1), fmt_r(r2));
                     } else {
-                        var.to_string()
+                        return format!("{}{}{}", a, fmt_r(r1), fmt_r(r2));
                     }
-                };
-                if (r1 - r2).abs() < 1e-10 {
-                    return format!("{}^2", fmt_r(r1));
-                } else if a == 1.0 {
-                    return format!("{}{}", fmt_r(r1), fmt_r(r2));
-                } else {
-                    return format!("{}{}{}", a, fmt_r(r1), fmt_r(r2));
                 }
             }
         }
