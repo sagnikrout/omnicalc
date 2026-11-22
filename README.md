@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/badge/version-2026.11.18-blue.svg)](https://github.com/sagnikrout/omnicalc)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-442%2F442%20passed-brightgreen.svg)](destructive_test.sh)
+[![Tests](https://img.shields.io/badge/tests-450%2F450%20passed-brightgreen.svg)](destructive_test.sh)
 [![Benchmark](https://img.shields.io/badge/latency-0.80%20ms-purple.svg)](benchmark_comparison.py)
 
 ---
