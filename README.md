@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/badge/version-2026.11.18-blue.svg)](https://github.com/sagnikrout/omnicalc)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-450%2F450%20passed-brightgreen.svg)](destructive_test.sh)
+[![Tests](https://img.shields.io/badge/tests-460%2F460%20passed-brightgreen.svg)](destructive_test.sh)
 [![Benchmark](https://img.shields.io/badge/latency-0.80%20ms-purple.svg)](benchmark_comparison.py)
 
 ---
@@ -58,6 +58,7 @@ Benchmarked on Intel Core Ultra x86_64 across 50 iterations with 10 warmups:
 * **Affine Temperature Scales**: Supports correct physical offset conversions (`100 degC to degF` = `212 degF`, `0 degC to K` = `273.15 K`).
 * **Complex Analysis**: Full support for Euler's identity ($e^{i\pi} = -1$), complex exponents ($i^i$), complex roots, and complex trigonometry (`sin(i)`, `cos(i)`).
 * **Symbolic Computer Algebra (CAS)**: Computes analytical derivatives (`diff(x^3, x)` -> `3 * x^2`) and solves equations via Newton-Raphson (`sin(x) = 0`, `x^3 - 27 = 0`).
+* **Vector & Matrix Linear Algebra**: Spatial vectors (`[1, 2, 3] + [4, 5, 6]`, `dot`, `cross`, `norm`), matrices (`[[1, 2], [3, 4]] * [[5], [6]]`, `det`, `inv`, `transpose`), and simultaneous linear system solver (`solve([2x + y = 7, x - y = 2], [x, y])`).
 * **Gaussian Uncertainty Propagation**: Automatic absolute error propagation across operations (`(10 +/- 0.5) * (2 +/- 0.1)`).
 * **Bitwise & Radix Engine**: 64-bit integer engine with conversion to hexadecimal, binary, and octal (`-b hex`, `-b bin`).
 * **Deterministic Offline Currency**: Fast, offline currency conversions across major world currencies without network latency.

@@ -98,6 +98,7 @@ pub fn diff(expr: &Expr, var: &str) -> Expr {
                 simplify(&term)
             }
         }
+        Expr::List(list) => Expr::List(list.iter().map(|e| diff(e, var)).collect()),
         Expr::Call(name, args) if name == "diff" => {
             let inner_expr = &args[0];
             let v = if args.len() > 1 {

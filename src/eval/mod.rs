@@ -7,7 +7,11 @@ use std::collections::HashMap;
 pub mod functions;
 pub mod helpers;
 pub mod integral;
+pub mod la;
+pub mod matrix;
 pub mod quantity;
+pub mod system;
+pub mod vector;
 
 pub struct Evaluator {
     pub registry: UnitRegistry,
@@ -85,9 +89,16 @@ impl Evaluator {
                 };
                 Ok(symbolic::factor_polynomial(&args[0], var))
             }
-            Expr::Call(name, args) if name == "integrate" => self.eval_integral(args),
+            Expr::Call(name, args) if name == "integrate" || name == "int" => {
+                self.eval_integral(args)
+            }
+            Expr::Call(name, args) if name == "solve" => self.eval_solve(args),
             _ => {
-                // If it contains unknown variables and isn't purely numerical, simplify symbolically
+                if la::is_la_expr(expr) {
+                    let res = self.eval_la(expr)?;
+                    return Ok(res.format());
+                }
+
                 if self.is_purely_symbolic(expr) {
                     let simp = symbolic::simplify(expr);
                     return Ok(symbolic::format_symbolic(&simp));
@@ -105,6 +116,10 @@ impl Evaluator {
     }
 
     pub fn eval_raw(&mut self, expr: &Expr, base: u32) -> Result<String, String> {
+        if la::is_la_expr(expr) {
+            let res = self.eval_la(expr)?;
+            return Ok(res.format());
+        }
         let q = self.eval_quantity(expr)?;
         Ok(q.value.format_with_base(base, true))
     }
@@ -112,7 +127,6 @@ impl Evaluator {
     pub(crate) fn is_purely_symbolic(&self, expr: &Expr) -> bool {
         match expr {
             Expr::Unit(name) => {
-                // If name is NOT a unit in registry, it's a symbolic variable
                 self.registry.lookup(name).is_none() && !self.variables.contains_key(name)
             }
             Expr::Variable(_) => true,
@@ -120,6 +134,7 @@ impl Evaluator {
                 self.is_purely_symbolic(lhs) || self.is_purely_symbolic(rhs)
             }
             Expr::Unary(_, inner) => self.is_purely_symbolic(inner),
+            Expr::List(list) => list.iter().any(|e| self.is_purely_symbolic(e)),
             _ => false,
         }
     }

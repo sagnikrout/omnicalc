@@ -13,6 +13,7 @@ pub fn has_variable(expr: &Expr, var: &str) -> bool {
             has_variable(nominal, var) || has_variable(error, var)
         }
         Expr::Equation { lhs, rhs } => has_variable(lhs, var) || has_variable(rhs, var),
+        Expr::List(list) => list.iter().any(|e| has_variable(e, var)),
     }
 }
 
@@ -86,6 +87,7 @@ pub fn simplify(expr: &Expr) -> Expr {
                 (l, op, r) => Expr::Binary(Box::new(l), op, Box::new(r)),
             }
         }
+        Expr::List(list) => Expr::List(list.iter().map(simplify).collect()),
         _ => expr.clone(),
     }
 }

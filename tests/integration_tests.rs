@@ -235,3 +235,135 @@ fn test_dimensional_power_safety() {
     let err_over = eval_expr("(5 m)^130").unwrap_err();
     assert!(err_over.contains("Dimensional exponent overflow"));
 }
+
+#[test]
+fn test_spatial_vector_algebra() {
+    // Vector addition and subtraction
+    assert_eq!(eval_expr("[1, 2, 3] + [4, 5, 6]").unwrap(), "[5, 7, 9]");
+    assert_eq!(eval_expr("[4, 5, 6] - [1, 2, 3]").unwrap(), "[3, 3, 3]");
+
+    // Scalar multiplication
+    assert_eq!(eval_expr("2 * [1, 2, 3]").unwrap(), "[2, 4, 6]");
+    assert_eq!(eval_expr("[1, 2, 3] * 3").unwrap(), "[3, 6, 9]");
+    assert_eq!(eval_expr("-[1, 2, 3]").unwrap(), "[-1, -2, -3]");
+
+    // Dot product
+    assert_eq!(eval_expr("dot([1, 2, 3], [4, 5, 6])").unwrap(), "32");
+
+    // Cross product
+    assert_eq!(
+        eval_expr("cross([1, 0, 0], [0, 1, 0])").unwrap(),
+        "[0, 0, 1]"
+    );
+    assert_eq!(
+        eval_expr("cross([0, 1, 0], [0, 0, 1])").unwrap(),
+        "[1, 0, 0]"
+    );
+
+    // Vector norm
+    assert_eq!(eval_expr("norm([3, 4])").unwrap(), "5");
+    assert_eq!(eval_expr("norm([1, 2, 2])").unwrap(), "3");
+}
+
+#[test]
+fn test_matrix_algebra() {
+    // Matrix addition and subtraction
+    assert_eq!(
+        eval_expr("[[1, 2], [3, 4]] + [[5, 6], [7, 8]]").unwrap(),
+        "[[6, 8], [10, 12]]"
+    );
+    assert_eq!(
+        eval_expr("[[5, 6], [7, 8]] - [[1, 2], [3, 4]]").unwrap(),
+        "[[4, 4], [4, 4]]"
+    );
+
+    // Matrix scalar multiplication
+    assert_eq!(
+        eval_expr("2 * [[1, 2], [3, 4]]").unwrap(),
+        "[[2, 4], [6, 8]]"
+    );
+    assert_eq!(
+        eval_expr("[[1, 2], [3, 4]] * 2").unwrap(),
+        "[[2, 4], [6, 8]]"
+    );
+
+    // Matrix multiplication
+    assert_eq!(
+        eval_expr("[[1, 2], [3, 4]] * [[5], [6]]").unwrap(),
+        "[[17], [39]]"
+    );
+    assert_eq!(
+        eval_expr("[[1, 2], [3, 4]] * [[5, 6], [7, 8]]").unwrap(),
+        "[[19, 22], [43, 50]]"
+    );
+
+    // Determinant, transpose, and inverse
+    assert_eq!(eval_expr("det([[1, 2], [3, 4]])").unwrap(), "-2");
+    assert_eq!(
+        eval_expr("transpose([[1, 2], [3, 4]])").unwrap(),
+        "[[1, 3], [2, 4]]"
+    );
+    assert_eq!(
+        eval_expr("inv([[1, 2], [3, 4]])").unwrap(),
+        "[[-2, 1], [1.5, -0.5]]"
+    );
+}
+
+#[test]
+fn test_linear_systems_solver() {
+    // 2-variable linear system with explicit variable list
+    let sol2 = eval_expr("solve([2x + y = 7, x - y = 2], [x, y])").unwrap();
+    assert_eq!(sol2, "[x = 3, y = 1]");
+
+    // 2-variable linear system with auto-detected variables
+    let sol2_auto = eval_expr("solve([2x + y = 7, x - y = 2])").unwrap();
+    assert_eq!(sol2_auto, "[x = 3, y = 1]");
+
+    // 3-variable linear system
+    let sol3 =
+        eval_expr("solve([x + y + z = 6, 2y + 5z = -4, 2x + 5y - z = 27], [x, y, z])").unwrap();
+    assert_eq!(sol3, "[x = 5, y = 3, z = -2]");
+
+    // Inconsistent system
+    let inc_err = eval_expr("solve([x + y = 1, x + y = 2], [x, y])").unwrap_err();
+    assert!(inc_err.contains("Inconsistent"));
+
+    // Degenerate/singular system
+    let degen_err = eval_expr("solve([x + y = 1, 2x + 2y = 2], [x, y])").unwrap_err();
+    assert!(degen_err.contains("degenerate"));
+}
+
+#[test]
+fn test_integration_alias_and_syntax() {
+    // int alias with comma syntax
+    assert_eq!(eval_expr("int(sin(x), 0, pi)").unwrap(), "2");
+    assert_eq!(eval_expr("int(6x^2, 1, 5)").unwrap(), "248");
+
+    // integrate with comma syntax
+    assert_eq!(eval_expr("integrate(sin(x), 0, pi)").unwrap(), "2");
+    assert_eq!(eval_expr("integrate(6x^2, 1, 5)").unwrap(), "248");
+
+    // integrate with legacy semicolon syntax
+    assert_eq!(eval_expr("integrate(6x^2; 1; 5)").unwrap(), "248");
+}
+
+#[test]
+fn test_linear_algebra_error_handling() {
+    // Vector length mismatch in addition
+    assert!(eval_expr("[1, 2] + [1, 2, 3]").is_err());
+
+    // Dot product length mismatch
+    assert!(eval_expr("dot([1, 2], [1, 2, 3])").is_err());
+
+    // Non-3D cross product
+    assert!(eval_expr("cross([1, 2], [3, 4])").is_err());
+
+    // Non-square determinant
+    assert!(eval_expr("det([[1, 2, 3], [4, 5, 6]])").is_err());
+
+    // Singular matrix inversion
+    assert!(eval_expr("inv([[1, 2], [2, 4]])").is_err());
+
+    // Matrix multiplication dimension mismatch
+    assert!(eval_expr("[[1, 2]] * [[1, 2]]").is_err());
+}

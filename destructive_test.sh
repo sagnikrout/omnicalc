@@ -638,7 +638,7 @@ run_test_v1 "PARSE" "Hash" "#" "1" ""
 run_test_v1 "PARSE" "Dollar sign" "\$5" "1" ""
 run_test_v1 "PARSE" "Backslash" "\\" "1" ""
 run_test_v1 "PARSE" "Curly braces" "{1+2}" "1" ""
-run_test_v1 "PARSE" "Square brackets" "[1+2]" "1" ""
+run_test_v1 "PARSE" "Square brackets" "[1+2]" "0" "[3]"
 run_test_v1 "PARSE" "Very long expression" "1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1+1" "0" "50"
 run_test_v1 "PARSE" "Unicode emoji" "😀" "1" ""
 run_test_v1 "PARSE" "Mixed valid/invalid" "2 + @ + 3" "1" ""
@@ -1009,6 +1009,16 @@ run_test "TC-AUDIT-05" "Audit" "Empty diff argument rejection: diff()" "ERROR:Fu
 run_test "TC-AUDIT-06" "Audit" "Identity equation: x = x" "SUCCESS:Identity: all real numbers satisfy this equation" -e 'x = x'
 run_test "TC-AUDIT-07" "Audit" "Contradiction equation: x = x + 5" "ERROR:Contradiction: equation has no solution" -e 'x = x + 5'
 run_test "TC-AUDIT-08" "Audit" "Dimensional power fractional check: (5 m)^2.5" "ERROR:Non-integer dimensional exponent" -e '(5 m)^2.5'
+run_test "TC-M2-01" "M2" "Vector addition: [1, 2, 3] + [4, 5, 6]" "SUCCESS:[5, 7, 9]" -e '[1, 2, 3] + [4, 5, 6]'
+run_test "TC-M2-02" "M2" "Scalar multiplication: 2 * [1, 2, 3]" "SUCCESS:[2, 4, 6]" -e '2 * [1, 2, 3]'
+run_test "TC-M2-03" "M2" "Dot product: dot([1, 2, 3], [4, 5, 6])" "SUCCESS:32" -e 'dot([1, 2, 3], [4, 5, 6])'
+run_test "TC-M2-04" "M2" "Cross product: cross([1, 0, 0], [0, 1, 0])" "SUCCESS:[0, 0, 1]" -e 'cross([1, 0, 0], [0, 1, 0])'
+run_test "TC-M2-05" "M2" "Vector norm: norm([3, 4])" "SUCCESS:5" -e 'norm([3, 4])'
+run_test "TC-M2-06" "M2" "Matrix multiplication: [[1, 2], [3, 4]] * [[5], [6]]" "SUCCESS:[[17], [39]]" -e '[[1, 2], [3, 4]] * [[5], [6]]'
+run_test "TC-M2-07" "M2" "Matrix determinant: det([[1, 2], [3, 4]])" "SUCCESS:-2" -e 'det([[1, 2], [3, 4]])'
+run_test "TC-M2-08" "M2" "Matrix inverse: inv([[1, 2], [3, 4]])" "SUCCESS:[[-2, 1], [1.5, -0.5]]" -e 'inv([[1, 2], [3, 4]])'
+run_test "TC-M2-09" "M2" "Linear system solver: solve([2x + y = 7, x - y = 2], [x, y])" "SUCCESS:[x = 3, y = 1]" -e 'solve([2x + y = 7, x - y = 2], [x, y])'
+run_test "TC-M2-10" "M2" "Integration alias: int(sin(x), 0, pi)" "SUCCESS:2" -e 'int(sin(x), 0, pi)'
 
 # ------------------------------------------------------------------------------
 # FINAL REPORT GENERATION

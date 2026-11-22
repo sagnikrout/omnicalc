@@ -469,6 +469,26 @@ impl Parser {
                 self.expect(Token::RParen)?;
                 Ok(inner)
             }
+            Token::LBracket => {
+                let mut elements = Vec::new();
+                if self.peek() != Some(&Token::RBracket) {
+                    loop {
+                        elements.push(self.parse_conversion_or_equation()?);
+                        if self.peek() == Some(&Token::Comma)
+                            || self.peek() == Some(&Token::Semicolon)
+                        {
+                            self.advance();
+                            if self.peek() == Some(&Token::RBracket) {
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                self.expect(Token::RBracket)?;
+                Ok(Expr::List(elements))
+            }
             other => Err(format!("Unexpected token: {:?}", other)),
         }
     }

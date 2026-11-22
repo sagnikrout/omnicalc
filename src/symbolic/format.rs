@@ -22,6 +22,10 @@ pub fn format_symbolic(expr: &Expr) -> String {
             let formatted_args: Vec<String> = args.iter().map(format_symbolic).collect();
             format!("{}({})", name, formatted_args.join(", "))
         }
+        Expr::List(list) => {
+            let elements: Vec<String> = list.iter().map(format_symbolic).collect();
+            format!("[{}]", elements.join(", "))
+        }
         _ => format!("{:?}", expr),
     }
 }

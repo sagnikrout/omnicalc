@@ -263,6 +263,7 @@ impl Evaluator {
             }
             Expr::ToBase { expr, .. } => self.eval_quantity(expr),
             Expr::Equation { .. } => Err("Equations cannot be evaluated as quantities".to_string()),
+            Expr::List(_) => Err("Cannot evaluate list as scalar quantity".to_string()),
         }
     }
 }

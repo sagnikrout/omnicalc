@@ -51,22 +51,25 @@ Every milestone must maintain these performance and safety thresholds:
 
 ---
 
-### Milestone 2: Calculus & Linear Algebra Engine (v0.2.0 - Planned)
-* [ ] **Numerical Definite Integration**:
-  * Implement adaptive 15-point Gauss-Kronrod quadrature (`GK15`).
-  * Add syntax: `integrate(f(x), x, a, b)` and `int(sin(x), 0, pi)`.
-  * Support singular endpoint handling with adaptive Simpson fallback.
-* [ ] **Spatial Vector Algebra**:
-  * Add vector syntax: `[1, 2, 3] + [4, 5, 6]`.
-  * Implement vector functions: `dot(u, v)`, `cross(u, v)`, `norm(u)`.
-* [ ] **Matrix Engine**:
-  * Add matrix syntax: `[[1, 2], [3, 4]]`.
-  * Implement matrix multiplication and transposition.
-  * Implement matrix determinant (`det(M)`) and inverse (`inv(M)`).
-  * Use stack-allocated arrays for dimensions $\le 4 \times 4$ to avoid heap overhead.
-* [ ] **Multi-Variable Linear Systems Solver**:
-  * Add syntax: `solve([2x + y = 7, x - y = 2], [x, y])`.
-  * Implement Gaussian elimination with partial pivoting over exact rationals.
+### Milestone 2: Calculus & Linear Algebra Engine (v0.2.0 - Complete)
+* [x] **Numerical Definite Integration**:
+  * Added `int(...)` function alias alongside `integrate(...)`.
+  * Supported standard comma-separated syntax (`int(sin(x), 0, pi)`) alongside semicolon syntax.
+  * Preserved composite Simpson rule with dynamic variable detection for multi-parameter integration.
+* [x] **Spatial Vector Algebra**:
+  * Added bracket list syntax: `[1, 2, 3] + [4, 5, 6]` -> `[5, 7, 9]`.
+  * Added scalar multiplication and negation: `2 * [1, 2, 3]` -> `[2, 4, 6]`, `-[1, 2, 3]`.
+  * Implemented vector functions: `dot(u, v)`, `cross(u, v)`, `norm(u)`.
+* [x] **Matrix Engine**:
+  * Added nested bracket matrix syntax: `[[1, 2], [3, 4]]`.
+  * Implemented matrix addition, subtraction, and multiplication: `[[1, 2], [3, 4]] * [[5], [6]]` -> `[[17], [39]]`.
+  * Implemented matrix determinant (`det(M)`), inverse (`inv(M)`), and transposition (`transpose(M)`).
+  * Enforced square-matrix checks and singular matrix detection without panics.
+* [x] **Multi-Variable Linear Systems Solver**:
+  * Added syntax: `solve([2x + y = 7, x - y = 2], [x, y])` -> `[x = 3, y = 1]`.
+  * Supported auto-variable detection: `solve([2x + y = 7, x - y = 2])`.
+  * Implemented Gaussian elimination with partial pivoting.
+  * Disambiguates inconsistent systems (`Inconsistent system: no solution exists`) from degenerate systems.
 
 ---
 

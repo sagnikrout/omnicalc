@@ -46,6 +46,7 @@ pub enum Expr {
         lhs: Box<Expr>,
         rhs: Box<Expr>,
     },
+    List(Vec<Expr>),
 }
 
 impl fmt::Display for BinaryOp {

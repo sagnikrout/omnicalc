@@ -15,7 +15,7 @@ pub fn detect_equation_variable(lhs: &Expr, rhs: &Expr) -> String {
     }
 }
 
-fn collect_variables(expr: &Expr, vars: &mut Vec<String>) {
+pub fn collect_variables(expr: &Expr, vars: &mut Vec<String>) {
     match expr {
         Expr::Variable(v) => {
             if !vars.contains(v) {
@@ -45,6 +45,11 @@ fn collect_variables(expr: &Expr, vars: &mut Vec<String>) {
         Expr::Equation { lhs, rhs } => {
             collect_variables(lhs, vars);
             collect_variables(rhs, vars);
+        }
+        Expr::List(list) => {
+            for e in list {
+                collect_variables(e, vars);
+            }
         }
         _ => {}
     }
@@ -181,6 +186,7 @@ pub(crate) fn eval_with_var(expr: &Expr, var: &str, val: f64) -> Result<f64, Str
                 _ => Err(format!("Unsupported function '{}' in root finder", name)),
             }
         }
+        Expr::List(_) => Err("Cannot evaluate list as scalar in equation solver".to_string()),
         _ => Err(format!(
             "Unsupported expression node '{:?}' in equation evaluation",
             expr

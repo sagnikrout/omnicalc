@@ -5,7 +5,8 @@ use crate::quantity::Quantity;
 
 impl Evaluator {
     pub(crate) fn eval_integral(&mut self, args: &[Expr]) -> Result<String, String> {
-        // integrate(expr; lower; upper) or integrate(expr; var; lower; upper)
+        // integrate(expr; lower; upper) or integrate(expr, lower, upper)
+        // or integrate(expr; var; lower; upper) or integrate(expr, var, lower, upper)
         let (expr, var, lower_e, upper_e) = if args.len() == 4 {
             let v_str = match &args[1] {
                 Expr::Unit(s) | Expr::Variable(s) => s.clone(),
@@ -13,10 +14,19 @@ impl Evaluator {
             };
             (&args[0], v_str, &args[2], &args[3])
         } else if args.len() == 3 {
-            (&args[0], "x".to_string(), &args[1], &args[2])
+            let mut detected_vars = Vec::new();
+            crate::symbolic::collect_variables(&args[0], &mut detected_vars);
+            let v_str = if detected_vars.contains(&"x".to_string()) {
+                "x".to_string()
+            } else if let Some(first) = detected_vars.into_iter().next() {
+                first
+            } else {
+                "x".to_string()
+            };
+            (&args[0], v_str, &args[1], &args[2])
         } else {
             return Err(
-                "integrate requires 3 or 4 arguments: (expr; [var;] lower; upper)".to_string(),
+                "Integration requires 3 or 4 arguments: (expr, [var,] lower, upper) or (expr; [var;] lower; upper)".to_string(),
             );
         };
 
