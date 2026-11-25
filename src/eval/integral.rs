@@ -30,8 +30,18 @@ impl Evaluator {
             );
         };
 
-        let a = self.eval_quantity(lower_e)?.value.to_f64();
-        let b = self.eval_quantity(upper_e)?.value.to_f64();
+        let a_q = self.eval_quantity(lower_e)?;
+        let b_q = self.eval_quantity(upper_e)?;
+        if matches!(a_q.value, NumericValue::Complex(_))
+            || matches!(b_q.value, NumericValue::Complex(_))
+        {
+            return Err("Numerical integration bounds must be real numbers".to_string());
+        }
+        let a = a_q.value.to_f64();
+        let b = b_q.value.to_f64();
+        if !a.is_finite() || !b.is_finite() {
+            return Err("Numerical integration bounds must be finite".to_string());
+        }
 
         // Numerical integration via Composite Simpson's Rule with N = 1000 intervals
         let n = 1000;
@@ -51,6 +61,9 @@ impl Evaluator {
         }
 
         let integral = sum * (h / 3.0);
+        if !integral.is_finite() {
+            return Err("Numerical integration produced non-finite result".to_string());
+        }
         if integral.fract().abs() < 1e-10 {
             Ok(format!("{:.0}", integral))
         } else {
@@ -81,6 +94,15 @@ impl Evaluator {
             }
         }
         let q = res?;
-        Ok(q.value.to_f64())
+        if matches!(q.value, NumericValue::Complex(_)) {
+            return Err(
+                "Numerical integration currently only supports real scalar integrands".to_string(),
+            );
+        }
+        let f = q.value.to_f64();
+        if !f.is_finite() {
+            return Err("Integrand evaluated to non-finite value".to_string());
+        }
+        Ok(f)
     }
 }

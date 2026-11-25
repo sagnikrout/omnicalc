@@ -92,10 +92,20 @@ impl Evaluator {
                 match op {
                     BinaryOp::Add => q_lhs + q_rhs,
                     BinaryOp::Sub => q_lhs - q_rhs,
-                    BinaryOp::Mul => Ok(q_lhs * q_rhs),
+                    BinaryOp::Mul => {
+                        if q_lhs.dimension.checked_add(q_rhs.dimension).is_none() {
+                            return Err(
+                                "Dimensional exponent overflow in multiplication".to_string()
+                            );
+                        }
+                        Ok(q_lhs * q_rhs)
+                    }
                     BinaryOp::Div => {
                         if q_rhs.value.is_zero() {
                             return Err("Division by zero".to_string());
+                        }
+                        if q_lhs.dimension.checked_sub(q_rhs.dimension).is_none() {
+                            return Err("Dimensional exponent overflow in division".to_string());
                         }
                         Ok(q_lhs / q_rhs)
                     }

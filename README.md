@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/badge/version-2026.11.18-blue.svg)](https://github.com/sagnikrout/omnicalc)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-460%2F460%20passed-brightgreen.svg)](destructive_test.sh)
+[![Tests](https://img.shields.io/badge/tests-470%2F470%20passed-brightgreen.svg)](destructive_test.sh)
 [![Benchmark](https://img.shields.io/badge/latency-0.80%20ms-purple.svg)](benchmark_comparison.py)
 
 ---
@@ -110,8 +110,13 @@ omnicalc -e "100 degC to degF"
 omnicalc -e "exp(i * pi)"
 omnicalc -e "i^i"
 
-# Symbolic differentiation
+# Symbolic differentiation & definite integration
 omnicalc -e "diff(x^3, x)"
+omnicalc -e "int(sin(x), 0, pi)"
+
+# Vector, matrix & linear system solving
+omnicalc -e "det([[1, 2], [3, 4]])"
+omnicalc -e "solve([2x + y = 7, x - y = 2], [x, y])"
 
 # Equation solving
 omnicalc -e "2x + 4 = 10"
@@ -154,9 +159,9 @@ omnicalc> cbrt(-8)
 
 ## Verification & Test Suites
 
-The codebase is validated against 442 automated destructive tests with a 100% pass rate:
+The codebase is validated against 470 automated destructive tests with a 100% pass rate:
 
-1. **Master Destructive Test Suite (442 tests):**
+1. **Master Destructive Test Suite (470 tests):**
    ```bash
    ./destructive_test.sh
    ```

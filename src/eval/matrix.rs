@@ -2,8 +2,35 @@
 
 use super::la::LaValue;
 
+fn validate_matrix(
+    m: &[Vec<f64>],
+    require_square: bool,
+    op_name: &str,
+) -> Result<(usize, usize), String> {
+    let rows = m.len();
+    if rows == 0 || m[0].is_empty() {
+        return Err(format!("Cannot perform {} on empty matrix", op_name));
+    }
+    let cols = m[0].len();
+    for row in m {
+        if row.len() != cols {
+            return Err("Matrix row length mismatch".to_string());
+        }
+        if row.iter().any(|x| !x.is_finite()) {
+            return Err(format!("Matrix contains non-finite values in {}", op_name));
+        }
+    }
+    if require_square && rows != cols {
+        return Err(format!(
+            "{} requires a square matrix (got {}x{})",
+            op_name, rows, cols
+        ));
+    }
+    Ok((rows, cols))
+}
+
 pub fn eval_transpose(m: &[Vec<f64>]) -> Vec<Vec<f64>> {
-    if m.is_empty() {
+    if m.is_empty() || m[0].is_empty() {
         return Vec::new();
     }
     let rows = m.len();
@@ -18,24 +45,16 @@ pub fn eval_transpose(m: &[Vec<f64>]) -> Vec<Vec<f64>> {
 }
 
 pub fn eval_det(m: &[Vec<f64>]) -> Result<f64, String> {
-    let n = m.len();
-    if n == 0 {
-        return Err("Cannot compute determinant of empty matrix".to_string());
-    }
-    for row in m {
-        if row.len() != n {
-            return Err(format!(
-                "Determinant requires a square matrix (got {}x{})",
-                n,
-                row.len()
-            ));
-        }
-    }
+    let (n, _) = validate_matrix(m, true, "determinant")?;
     if n == 1 {
         return Ok(m[0][0]);
     }
     if n == 2 {
-        return Ok(m[0][0] * m[1][1] - m[0][1] * m[1][0]);
+        let det = m[0][0] * m[1][1] - m[0][1] * m[1][0];
+        if !det.is_finite() {
+            return Err("Determinant overflowed to non-finite value".to_string());
+        }
+        return Ok(det);
     }
     let mut a: Vec<Vec<f64>> = m.to_vec();
     let mut det = 1.0;
@@ -48,6 +67,9 @@ pub fn eval_det(m: &[Vec<f64>]) -> Result<f64, String> {
                 max_val = a[k][i].abs();
                 max_row = k;
             }
+        }
+        if !max_val.is_finite() {
+            return Err("Determinant overflowed to non-finite value".to_string());
         }
         if max_val < 1e-12 {
             return Ok(0.0);
@@ -68,23 +90,14 @@ pub fn eval_det(m: &[Vec<f64>]) -> Result<f64, String> {
     if swaps % 2 == 1 {
         det = -det;
     }
+    if !det.is_finite() {
+        return Err("Determinant overflowed to non-finite value".to_string());
+    }
     Ok(det)
 }
 
 pub fn eval_inv(m: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, String> {
-    let n = m.len();
-    if n == 0 {
-        return Err("Cannot invert empty matrix".to_string());
-    }
-    for row in m {
-        if row.len() != n {
-            return Err(format!(
-                "Matrix inversion requires a square matrix (got {}x{})",
-                n,
-                row.len()
-            ));
-        }
-    }
+    let (n, _) = validate_matrix(m, true, "matrix inversion")?;
     let mut a: Vec<Vec<f64>> = m.to_vec();
     let mut inv = vec![vec![0.0; n]; n];
     for i in 0..n {
@@ -132,13 +145,8 @@ pub fn eval_inv(m: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, String> {
 }
 
 pub fn eval_matrix_mul(a: &[Vec<f64>], b: &[Vec<f64>]) -> Result<Vec<Vec<f64>>, String> {
-    if a.is_empty() || b.is_empty() {
-        return Err("Cannot multiply empty matrix".to_string());
-    }
-    let m = a.len();
-    let k = a[0].len();
-    let p = b.len();
-    let n = b[0].len();
+    let (m, k) = validate_matrix(a, false, "multiplication")?;
+    let (p, n) = validate_matrix(b, false, "multiplication")?;
     if k != p {
         return Err(format!(
             "Matrix dimension mismatch in multiplication: left has {} columns, right has {} rows",

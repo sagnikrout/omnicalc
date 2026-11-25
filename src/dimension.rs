@@ -174,6 +174,34 @@ impl Dimension {
             currency: self.currency / n,
         }
     }
+
+    pub fn checked_add(self, rhs: Self) -> Option<Self> {
+        Some(Self {
+            length: self.length.checked_add(rhs.length)?,
+            mass: self.mass.checked_add(rhs.mass)?,
+            time: self.time.checked_add(rhs.time)?,
+            current: self.current.checked_add(rhs.current)?,
+            temperature: self.temperature.checked_add(rhs.temperature)?,
+            amount: self.amount.checked_add(rhs.amount)?,
+            luminosity: self.luminosity.checked_add(rhs.luminosity)?,
+            digital: self.digital.checked_add(rhs.digital)?,
+            currency: self.currency.checked_add(rhs.currency)?,
+        })
+    }
+
+    pub fn checked_sub(self, rhs: Self) -> Option<Self> {
+        Some(Self {
+            length: self.length.checked_sub(rhs.length)?,
+            mass: self.mass.checked_sub(rhs.mass)?,
+            time: self.time.checked_sub(rhs.time)?,
+            current: self.current.checked_sub(rhs.current)?,
+            temperature: self.temperature.checked_sub(rhs.temperature)?,
+            amount: self.amount.checked_sub(rhs.amount)?,
+            luminosity: self.luminosity.checked_sub(rhs.luminosity)?,
+            digital: self.digital.checked_sub(rhs.digital)?,
+            currency: self.currency.checked_sub(rhs.currency)?,
+        })
+    }
 }
 
 impl Add for Dimension {

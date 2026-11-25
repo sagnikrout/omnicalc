@@ -367,3 +367,37 @@ fn test_linear_algebra_error_handling() {
     // Matrix multiplication dimension mismatch
     assert!(eval_expr("[[1, 2]] * [[1, 2]]").is_err());
 }
+
+#[test]
+fn test_audit_m2_hardening_guards() {
+    // Nested empty diff/factor must return Err, never panic
+    assert!(eval_expr("diff(diff())").is_err());
+    assert!(eval_expr("diff(1 + factor())").is_err());
+
+    // Nonlinearity probe bypass fix (x*(x-1) vanishes at 0 and 1)
+    let nl_err = eval_expr("solve([x * (x - 1) + y = 2, y = 2], [x, y])").unwrap_err();
+    assert!(nl_err.contains("non-linear"));
+
+    // Complex rejection in LA and numerical integration
+    assert!(eval_expr("[i]").is_err());
+    assert!(eval_expr("int(sqrt(-1), 0, 1)").is_err());
+
+    // Empty-row matrix and empty vector transpose rejection
+    assert!(eval_expr("[[]]").is_err());
+    assert!(eval_expr("transpose([])").is_err());
+
+    // Dimension multiplication overflow guard
+    assert!(eval_expr("(5 m)^100 * (5 m)^50").is_err());
+
+    // Unit-aware rounding in display scale
+    assert_eq!(eval_expr("round(10.6 km)").unwrap(), "11 km");
+    assert_eq!(eval_expr("round(20.6 degC)").unwrap(), "21 degC");
+    assert_eq!(eval_expr("floor(20.6 degC)").unwrap(), "20 degC");
+    assert_eq!(eval_expr("ceil(20.2 degC)").unwrap(), "21 degC");
+
+    // Overflow-safe vector norm
+    let norm_res = eval_expr("norm([3e200, 4e200])").unwrap();
+    let norm_val: f64 = norm_res.parse().unwrap();
+    assert!(norm_val.is_finite());
+    assert!((norm_val / 5e200 - 1.0).abs() < 1e-12);
+}

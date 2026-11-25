@@ -2,6 +2,28 @@ use super::Evaluator;
 use super::matrix::{eval_det, eval_inv, eval_transpose, la_add, la_mul, la_sub};
 use super::vector::{eval_cross, eval_dot, eval_norm};
 use crate::ast::Expr;
+use crate::numeric::NumericValue;
+use crate::quantity::Quantity;
+
+fn extract_real_scalar(q: &Quantity) -> Result<f64, String> {
+    if !q.dimension.is_dimensionless() {
+        return Err(format!(
+            "Vectors and matrices require dimensionless values (got [{}])",
+            q.dimension
+        ));
+    }
+    if matches!(q.value, NumericValue::Complex(_)) {
+        return Err(
+            "Vectors and matrices currently only support real numbers (got complex value)"
+                .to_string(),
+        );
+    }
+    let val = q.value.to_f64();
+    if !val.is_finite() {
+        return Err("Vectors and matrices require finite real numbers".to_string());
+    }
+    Ok(val)
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LaValue {
@@ -78,6 +100,9 @@ impl Evaluator {
                     } else {
                         0
                     };
+                    if expected_cols == 0 {
+                        return Err("Empty matrix rows ([[]]) are not valid".to_string());
+                    }
                     for v in vals {
                         if let LaValue::Vector(row) = v {
                             if row.len() != expected_cols {
@@ -162,19 +187,18 @@ impl Evaluator {
                     }
                     match self.eval_la(&args[0])? {
                         LaValue::Matrix(m) => Ok(LaValue::Matrix(eval_transpose(&m))),
-                        LaValue::Vector(v) => Ok(LaValue::Matrix(vec![v])),
+                        LaValue::Vector(v) => {
+                            if v.is_empty() {
+                                return Err("Cannot transpose an empty vector".to_string());
+                            }
+                            Ok(LaValue::Matrix(vec![v]))
+                        }
                         LaValue::Scalar(s) => Ok(LaValue::Scalar(s)),
                     }
                 }
                 _ => {
                     let q = self.eval_quantity(expr)?;
-                    if !q.dimension.is_dimensionless() {
-                        return Err(format!(
-                            "Vectors and matrices require dimensionless values (got [{}])",
-                            q.dimension
-                        ));
-                    }
-                    Ok(LaValue::Scalar(q.value.to_f64()))
+                    Ok(LaValue::Scalar(extract_real_scalar(&q)?))
                 }
             },
             Expr::Unary(crate::ast::UnaryOp::Neg, inner) => match self.eval_la(inner)? {
@@ -204,13 +228,7 @@ impl Evaluator {
             }
             _ => {
                 let q = self.eval_quantity(expr)?;
-                if !q.dimension.is_dimensionless() {
-                    return Err(format!(
-                        "Vectors and matrices require dimensionless values (got [{}])",
-                        q.dimension
-                    ));
-                }
-                Ok(LaValue::Scalar(q.value.to_f64()))
+                Ok(LaValue::Scalar(extract_real_scalar(&q)?))
             }
         }
     }

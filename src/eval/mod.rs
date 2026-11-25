@@ -35,6 +35,8 @@ impl Evaluator {
     pub fn eval(&mut self, expr: &Expr) -> Result<String, String> {
         match expr {
             Expr::Equation { lhs, rhs } => {
+                validate_symbolic_calls(lhs)?;
+                validate_symbolic_calls(rhs)?;
                 let var = symbolic::detect_equation_variable(lhs, rhs);
                 symbolic::solve_equation(lhs, rhs, &var)
             }
@@ -54,6 +56,7 @@ impl Evaluator {
                             .to_string(),
                     );
                 }
+                validate_symbolic_calls(&args[0])?;
                 let var = if args.len() > 1 {
                     if let Expr::Unit(v) = &args[1] {
                         v.as_str()
@@ -76,6 +79,7 @@ impl Evaluator {
                             .to_string(),
                     );
                 }
+                validate_symbolic_calls(&args[0])?;
                 let var = if args.len() > 1 {
                     if let Expr::Unit(v) = &args[1] {
                         v.as_str()
@@ -137,5 +141,40 @@ impl Evaluator {
             Expr::List(list) => list.iter().any(|e| self.is_purely_symbolic(e)),
             _ => false,
         }
+    }
+}
+
+fn validate_symbolic_calls(expr: &Expr) -> Result<(), String> {
+    match expr {
+        Expr::Call(name, args) => {
+            if (name == "diff" || name == "factor") && args.is_empty() {
+                return Err(format!(
+                    "Function '{}' requires at least 1 argument: {}(expr[, var])",
+                    name, name
+                ));
+            }
+            for arg in args {
+                validate_symbolic_calls(arg)?;
+            }
+            Ok(())
+        }
+        Expr::Binary(lhs, _, rhs) | Expr::Equation { lhs, rhs } => {
+            validate_symbolic_calls(lhs)?;
+            validate_symbolic_calls(rhs)
+        }
+        Expr::Unary(_, inner)
+        | Expr::Convert { expr: inner, .. }
+        | Expr::ToBase { expr: inner, .. } => validate_symbolic_calls(inner),
+        Expr::Uncertainty { nominal, error } => {
+            validate_symbolic_calls(nominal)?;
+            validate_symbolic_calls(error)
+        }
+        Expr::List(items) => {
+            for item in items {
+                validate_symbolic_calls(item)?;
+            }
+            Ok(())
+        }
+        Expr::Number(_) | Expr::Unit(_) | Expr::Variable(_) => Ok(()),
     }
 }

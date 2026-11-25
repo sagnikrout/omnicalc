@@ -1,3 +1,6 @@
+use crate::numeric::NumericValue;
+use crate::quantity::Quantity;
+use crate::units::UnitRegistry;
 use num_bigint::BigInt;
 use num_traits::{Signed, Zero};
 
@@ -36,4 +39,27 @@ pub(crate) fn lcm_bigint(a: BigInt, b: BigInt) -> BigInt {
         let g = gcd_bigint(a.clone(), b.clone());
         ((a / g) * b).abs()
     }
+}
+
+pub(crate) fn round_quantity(
+    q: &Quantity,
+    mode: &str,
+    registry: &UnitRegistry,
+) -> Result<Quantity, String> {
+    let apply = |val: f64| match mode {
+        "round" => val.round(),
+        "floor" => val.floor(),
+        _ => val.ceil(),
+    };
+    if let Some(ref unit_name) = q.unit_str
+        && let Ok(converted) = q.to_unit(unit_name, registry)
+    {
+        let rounded = apply(converted.value.to_f64());
+        return Quantity::from_unit(NumericValue::from_f64(rounded), unit_name, registry);
+    }
+    Ok(Quantity {
+        value: NumericValue::from_f64(apply(q.value.to_f64())),
+        dimension: q.dimension,
+        unit_str: q.unit_str.clone(),
+    })
 }

@@ -75,20 +75,37 @@ pub fn solve_linear_system(equations: &[Expr], vars: &[String]) -> Result<String
     let mut b = vec![0.0; m];
 
     let zeros = vec![0.0; n];
+    let p1: Vec<f64> = (0..n).map(|j| 1.3719 + (j as f64) * 0.61803).collect();
+    let p2: Vec<f64> = (0..n).map(|j| -2.1837 - (j as f64) * 0.41421).collect();
     for (i, eq) in equations.iter().enumerate() {
         let c0 = eval_expr_vars(eq, vars, &zeros)?;
+        if !c0.is_finite() {
+            return Err(format!("Equation {} produced non-finite constant", i + 1));
+        }
         b[i] = -c0;
         for j in 0..n {
             let mut ej = vec![0.0; n];
             ej[j] = 1.0;
             let val_ej = eval_expr_vars(eq, vars, &ej)?;
+            if !val_ej.is_finite() {
+                return Err(format!(
+                    "Equation {} produced non-finite coefficient",
+                    i + 1
+                ));
+            }
             a[i][j] = val_ej - c0;
         }
-        let ones = vec![1.0; n];
-        let val_ones = eval_expr_vars(eq, vars, &ones)?;
-        let expected: f64 = a[i].iter().sum::<f64>() + c0;
-        if (val_ones - expected).abs() > 1e-5 {
-            return Err(format!("Equation {} is non-linear", i + 1));
+        for probe in [&p1, &p2] {
+            let val_p = eval_expr_vars(eq, vars, probe)?;
+            let expected: f64 = a[i]
+                .iter()
+                .zip(probe.iter())
+                .map(|(c, x)| c * x)
+                .sum::<f64>()
+                + c0;
+            if !val_p.is_finite() || (val_p - expected).abs() > 1e-5 {
+                return Err(format!("Equation {} is non-linear", i + 1));
+            }
         }
     }
 
@@ -143,6 +160,9 @@ pub fn solve_linear_system(equations: &[Expr], vars: &[String]) -> Result<String
     let mut solutions = Vec::new();
     for (i, var) in vars.iter().enumerate() {
         let val = aug[i][n];
+        if !val.is_finite() {
+            return Err("Linear system produced non-finite solution".to_string());
+        }
         solutions.push(format!("{} = {}", var, format_scalar(val)));
     }
     Ok(format!("[{}]", solutions.join(", ")))
@@ -174,6 +194,15 @@ fn eval_expr_vars(expr: &Expr, vars: &[String], vals: &[f64]) -> Result<f64, Str
                 return Err("Division by zero in linear system".to_string());
             }
             Ok(eval_expr_vars(lhs, vars, vals)? / d)
+        }
+        Expr::Binary(lhs, crate::ast::BinaryOp::Pow, rhs) => {
+            let base = eval_expr_vars(lhs, vars, vals)?;
+            let exp = eval_expr_vars(rhs, vars, vals)?;
+            let res = base.powf(exp);
+            if !res.is_finite() {
+                return Err("Non-finite power in linear system".to_string());
+            }
+            Ok(res)
         }
         Expr::Equation { lhs, rhs } => {
             Ok(eval_expr_vars(lhs, vars, vals)? - eval_expr_vars(rhs, vars, vals)?)

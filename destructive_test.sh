@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # OMNICALC UNIFIED MASTER DESTRUCTIVE TEST SUITE
-# 442 Comprehensive Edge Cases, Boundary Probes & Calculator Ecosystem Tests
-# Target Binary: /home/sagnik/bin/omnicalc
+# Comprehensive Edge Cases, Boundary Probes & Calculator Ecosystem Tests
+# Target Binary: Resolved dynamically via OMNICALC_BIN / target / PATH
 # ==============================================================================
 
 set -u
@@ -1019,6 +1019,16 @@ run_test "TC-M2-07" "M2" "Matrix determinant: det([[1, 2], [3, 4]])" "SUCCESS:-2
 run_test "TC-M2-08" "M2" "Matrix inverse: inv([[1, 2], [3, 4]])" "SUCCESS:[[-2, 1], [1.5, -0.5]]" -e 'inv([[1, 2], [3, 4]])'
 run_test "TC-M2-09" "M2" "Linear system solver: solve([2x + y = 7, x - y = 2], [x, y])" "SUCCESS:[x = 3, y = 1]" -e 'solve([2x + y = 7, x - y = 2], [x, y])'
 run_test "TC-M2-10" "M2" "Integration alias: int(sin(x), 0, pi)" "SUCCESS:2" -e 'int(sin(x), 0, pi)'
+run_test "TC-M2-AUDIT-01" "M2-Audit" "Nested empty diff panic guard: diff(diff())" "ERROR:requires at least 1 argument" -e 'diff(diff())'
+run_test "TC-M2-AUDIT-02" "M2-Audit" "Nested empty factor panic guard: diff(1 + factor())" "ERROR:requires at least 1 argument" -e 'diff(1 + factor())'
+run_test "TC-M2-AUDIT-03" "M2-Audit" "Linearity probe bypass: solve([x*(x-1)+y=2, y=2], [x,y])" "ERROR:non-linear" -e 'solve([x * (x - 1) + y = 2, y = 2], [x, y])'
+run_test "TC-M2-AUDIT-04" "M2-Audit" "Complex rejection in vector: [i]" "ERROR:only support real numbers" -e '[i]'
+run_test "TC-M2-AUDIT-05" "M2-Audit" "Complex rejection in integration: int(sqrt(-1), 0, 1)" "ERROR:only supports real scalar" -e 'int(sqrt(-1), 0, 1)'
+run_test "TC-M2-AUDIT-06" "M2-Audit" "Empty matrix row rejection: [[]]" "ERROR:Empty matrix rows" -e '[[]]'
+run_test "TC-M2-AUDIT-07" "M2-Audit" "Empty vector transpose rejection: transpose([])" "ERROR:empty vector" -e 'transpose([])'
+run_test "TC-M2-AUDIT-08" "M2-Audit" "Dimension mul overflow guard: (5 m)^100 * (5 m)^50" "ERROR:Dimensional exponent overflow" -e '(5 m)^100 * (5 m)^50'
+run_test "TC-M2-AUDIT-09" "M2-Audit" "Unit-aware rounding km: round(10.6 km)" "SUCCESS:11 km" -e 'round(10.6 km)'
+run_test "TC-M2-AUDIT-10" "M2-Audit" "Unit-aware rounding degC: round(20.6 degC)" "SUCCESS:21 degC" -e 'round(20.6 degC)'
 
 # ------------------------------------------------------------------------------
 # FINAL REPORT GENERATION

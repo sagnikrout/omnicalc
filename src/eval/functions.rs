@@ -266,16 +266,7 @@ impl Evaluator {
                         evaluated_args.len()
                     ));
                 }
-                let v = match name {
-                    "round" => first.value.to_f64().round(),
-                    "floor" => first.value.to_f64().floor(),
-                    _ => first.value.to_f64().ceil(),
-                };
-                Ok(Quantity {
-                    value: NumericValue::from_f64(v),
-                    dimension: first.dimension,
-                    unit_str: first.unit_str.clone(),
-                })
+                super::helpers::round_quantity(first, name, &self.registry)
             }
             _ => Err(format!("Unknown function: '{}'", name)),
         }

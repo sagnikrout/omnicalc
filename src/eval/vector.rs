@@ -25,6 +25,10 @@ pub fn eval_cross(u: &[f64], v: &[f64]) -> Result<Vec<f64>, String> {
 }
 
 pub fn eval_norm(u: &[f64]) -> Result<f64, String> {
-    let sum_sq: f64 = u.iter().map(|x| x * x).sum();
-    Ok(sum_sq.sqrt())
+    let max_abs = u.iter().map(|x| x.abs()).fold(0.0_f64, f64::max);
+    if max_abs == 0.0 {
+        return Ok(0.0);
+    }
+    let sum_sq: f64 = u.iter().map(|x| (x / max_abs).powi(2)).sum();
+    Ok(max_abs * sum_sq.sqrt())
 }

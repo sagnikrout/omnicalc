@@ -100,7 +100,9 @@ pub fn diff(expr: &Expr, var: &str) -> Expr {
         }
         Expr::List(list) => Expr::List(list.iter().map(|e| diff(e, var)).collect()),
         Expr::Call(name, args) if name == "diff" => {
-            let inner_expr = &args[0];
+            let Some(inner_expr) = args.first() else {
+                return Expr::Number(NumericValue::from_i64(0));
+            };
             let v = if args.len() > 1 {
                 match &args[1] {
                     Expr::Unit(s) | Expr::Variable(s) => s.as_str(),
