@@ -2,7 +2,7 @@
 
 **Baseline Date:** 2026-11-25  
 **Prior Audit Baseline Commit:** `ce7ea73` (`master`)  
-**Milestone 3 Scope:** CLI Ergonomics & Shell Polish (`--completions`, `dist/man/omnicalc.1`, `--update-rates` ECB cache) across all 49 repository files (excluding `target/` and `.git/`).
+**Milestone 4 Scope:** `cargo-fuzz` + `ASan` harness (`fuzz_parser`, `fuzz_eval`, `fuzz_units`) added cleanly under `fuzz/`.
 
 ---
 

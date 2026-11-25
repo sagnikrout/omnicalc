@@ -89,15 +89,14 @@ Every milestone must maintain these performance and safety thresholds:
 
 ---
 
-### Milestone 4: Continuous Fuzz Testing & Hardening (v0.4.0 - Planned)
-* [ ] **Continuous Fuzz Harness**:
+### Milestone 4: Continuous Fuzz Testing & Hardening (v0.4.0 - Smoke-Verified)
+* [x] **Continuous Fuzz Harness**:
   * Setup `cargo-fuzz` with LLVM `libFuzzer` in `/home/sagnik/code/omnicalc/fuzz`.
-  * Target 1: `fuzz_parser` (arbitrary UTF-8 and binary byte streams).
-  * Target 2: `fuzz_eval` (random AST expressions with extreme numeric values).
-  * Target 3: `fuzz_units` (random dimensional reductions).
-* [ ] **Sanitizer Verification**:
-  * Run AddressSanitizer (`ASan`) and UndefinedBehaviorSanitizer (`UBSan`).
-  * Verify zero memory violations across $10^7$ fuzzing iterations.
+  * Target 1: `fuzz_parser` (arbitrary UTF-8 and binary byte streams — 410,175 ASan runs, 0 crashes).
+  * Target 2: `fuzz_eval` (seeded & mutated AST expressions — 63,645 ASan runs, 0 crashes).
+  * Target 3: `fuzz_units` (random dimensional conversions & lookups — 22,683 ASan runs, 0 crashes).
+* [ ] **Long-Duration & UBSan Verification**:
+  * Run AddressSanitizer (`ASan`) and UndefinedBehaviorSanitizer (`UBSan`) for $10^7$ iterations in dedicated CI/nightly runs.
 
 ---
 
