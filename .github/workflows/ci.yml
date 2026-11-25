@@ -52,4 +52,5 @@ jobs:
         run: |
           bash -n package.sh
           bash -n destructive_test.sh
+          bash -n scripts/install_completions.sh
           python3 -m py_compile benchmark_comparison.py

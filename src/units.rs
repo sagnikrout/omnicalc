@@ -323,16 +323,71 @@ impl UnitRegistry {
 
         // Currencies (C) - Offline baseline reference exchange rates to USD (dated November 2026).
         // Note: These rates provide offline dimensional conversion parity and approximate estimation.
-        // They are static and do not reflect live real-time financial market exchange rates.
+        // They are static unless updated via opt-in `omnicalc --update-rates` (cached locally).
+        let cached = crate::rates::load_cached_rates();
+        let rate_or = |code: &str, default_scale: f64| -> f64 {
+            cached
+                .as_ref()
+                .and_then(|m| m.get(code).copied())
+                .unwrap_or(default_scale)
+        };
         self.add_unit("USD", "dollar", Dimension::CURRENCY, 1.0, 0.0);
-        self.add_unit("EUR", "euro", Dimension::CURRENCY, 1.038, 0.0);
-        self.add_unit("GBP", "pound_sterling", Dimension::CURRENCY, 1.250, 0.0);
-        self.add_unit("JPY", "yen", Dimension::CURRENCY, 1.0 / 155.0, 0.0);
-        self.add_unit("INR", "rupee", Dimension::CURRENCY, 1.0 / 85.5, 0.0);
-        self.add_unit("CAD", "canadian_dollar", Dimension::CURRENCY, 0.710, 0.0);
-        self.add_unit("AUD", "australian_dollar", Dimension::CURRENCY, 0.650, 0.0);
-        self.add_unit("CHF", "swiss_franc", Dimension::CURRENCY, 1.120, 0.0);
-        self.add_unit("CNY", "chinese_yuan", Dimension::CURRENCY, 1.0 / 7.25, 0.0);
+        self.add_unit(
+            "EUR",
+            "euro",
+            Dimension::CURRENCY,
+            rate_or("EUR", 1.038),
+            0.0,
+        );
+        self.add_unit(
+            "GBP",
+            "pound_sterling",
+            Dimension::CURRENCY,
+            rate_or("GBP", 1.250),
+            0.0,
+        );
+        self.add_unit(
+            "JPY",
+            "yen",
+            Dimension::CURRENCY,
+            rate_or("JPY", 1.0 / 155.0),
+            0.0,
+        );
+        self.add_unit(
+            "INR",
+            "rupee",
+            Dimension::CURRENCY,
+            rate_or("INR", 1.0 / 85.5),
+            0.0,
+        );
+        self.add_unit(
+            "CAD",
+            "canadian_dollar",
+            Dimension::CURRENCY,
+            rate_or("CAD", 0.710),
+            0.0,
+        );
+        self.add_unit(
+            "AUD",
+            "australian_dollar",
+            Dimension::CURRENCY,
+            rate_or("AUD", 0.650),
+            0.0,
+        );
+        self.add_unit(
+            "CHF",
+            "swiss_franc",
+            Dimension::CURRENCY,
+            rate_or("CHF", 1.120),
+            0.0,
+        );
+        self.add_unit(
+            "CNY",
+            "chinese_yuan",
+            Dimension::CURRENCY,
+            rate_or("CNY", 1.0 / 7.25),
+            0.0,
+        );
 
         // Common compound units
         self.add_unit("m/s", "meters_per_second", Dimension::VELOCITY, 1.0, 0.0);
@@ -497,6 +552,12 @@ impl UnitRegistry {
         // Target value = (base_value / to.scale) - to.offset
         let target_value = (base_value / to.scale) - to.offset;
         Ok(target_value)
+    }
+
+    pub fn all_unit_names(&self) -> Vec<String> {
+        let mut names: Vec<String> = self.units.keys().cloned().collect();
+        names.sort();
+        names
     }
 }
 

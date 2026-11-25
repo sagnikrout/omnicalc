@@ -1,9 +1,11 @@
 pub mod ast;
+pub mod completions;
 pub mod dimension;
 pub mod eval;
 pub mod lexer;
 pub mod numeric;
 pub mod parser;
 pub mod quantity;
+pub mod rates;
 pub mod symbolic;
 pub mod units;

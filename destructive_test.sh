@@ -1029,6 +1029,11 @@ run_test "TC-M2-AUDIT-07" "M2-Audit" "Empty vector transpose rejection: transpos
 run_test "TC-M2-AUDIT-08" "M2-Audit" "Dimension mul overflow guard: (5 m)^100 * (5 m)^50" "ERROR:Dimensional exponent overflow" -e '(5 m)^100 * (5 m)^50'
 run_test "TC-M2-AUDIT-09" "M2-Audit" "Unit-aware rounding km: round(10.6 km)" "SUCCESS:11 km" -e 'round(10.6 km)'
 run_test "TC-M2-AUDIT-10" "M2-Audit" "Unit-aware rounding degC: round(20.6 degC)" "SUCCESS:21 degC" -e 'round(20.6 degC)'
+run_test "TC-M3-01" "M3" "Bash completions generation" "SUCCESS:_omnicalc_math_words" --completions bash
+run_test "TC-M3-02" "M3" "Zsh completions generation" "SUCCESS:#compdef omnicalc" --completions zsh
+run_test "TC-M3-03" "M3" "Fish completions generation" "SUCCESS:complete -c omnicalc" --completions fish
+run_test "TC-M3-04" "M3" "PowerShell completions generation" "SUCCESS:Register-ArgumentCompleter" --completions powershell
+run_test "TC-M3-05" "M3" "Invalid completion shell rejected" "ERROR:invalid value" --completions invalid_shell
 
 # ------------------------------------------------------------------------------
 # FINAL REPORT GENERATION

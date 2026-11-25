@@ -1,9 +1,8 @@
 # `omnicalc` Project Index & Baseline Audit Ledger
 
 **Baseline Date:** 2026-11-25  
-**Prior Audit Baseline Commit:** `9a0b10d` (incorporating `d1c3b4c` and `99f0651`)  
-**Milestone 2 Feature Commit:** `af29f6c` (`master`)  
-**Scope:** Full line-by-line audit, hardening, verification, and sign-off across all 45 repository files (excluding `target/` and `.git/`).
+**Prior Audit Baseline Commit:** `ce7ea73` (`master`)  
+**Milestone 3 Scope:** CLI Ergonomics & Shell Polish (`--completions`, `dist/man/omnicalc.1`, `--update-rates` ECB cache) across all 49 repository files (excluding `target/` and `.git/`).
 
 ---
 
@@ -11,26 +10,28 @@
 
 | Status Label | Definition | File Count |
 | :--- | :--- | :--- |
-| **AUDITED** | Thoroughly audited and verified against hardening invariants, `cargo fmt`, `clippy -D warnings`, 27 integration tests, and 470 destructive tests. | 40 |
-| **AUDITED (STATIC BASE)** | Static manifest, lockfile, license, or credits unchanged since `9a0b10d`. Verified read-only. | 5 |
-| **Total** | **All tracked repository files (excluding this index)** | **45** |
+| **AUDITED** | Thoroughly audited and verified against hardening invariants, `cargo fmt`, `clippy -D warnings`, 28 integration tests, and 475 destructive tests. | 44 |
+| **AUDITED (STATIC BASE)** | Static manifest, lockfile, license, or credits. Verified read-only. | 5 |
+| **Total** | **All tracked repository files (excluding this index)** | **49** |
 
 ---
 
-## 2. Master File Inventory (All 45 Repository Files)
+## 2. Master File Inventory (All 49 Repository Files)
 
-### 2.1 Rust Application & Library Source (`src/` — 27 Files)
+### 2.1 Rust Application & Library Source (`src/` — 29 Files)
 
 | File | Layer / Duty | Lines | SHA-256 (12) | Audit Status |
 | :--- | :--- | :--- | :--- | :--- |
-| [src/lib.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/lib.rs) | Crate module exports | 9 | `0c8e64f5bda0` | **AUDITED** |
-| [src/main.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/main.rs) | Layer 7: CLI, pipe, REPL, credits | 241 | `d1e98272ab10` | **AUDITED** |
+| [src/lib.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/lib.rs) | Crate module exports | 11 | `2e49d496c87e` | **AUDITED** |
+| [src/main.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/main.rs) | Layer 7: CLI, completions, rates, REPL | 272 | `885bad253ba0` | **AUDITED** |
+| [src/completions.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/completions.rs) | Layer 7: `clap_complete` + unit/fn words | 76 | `d1535dd378e1` | **AUDITED** |
+| [src/rates.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/rates.rs) | Layer 2: Opt-in ECB XML fetch & cache | 178 | `6b82bc81a4eb` | **AUDITED** |
 | [src/ast.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/ast.rs) | Layer 2: AST expressions and ops | 69 | `4806dc4262ac` | **AUDITED** |
 | [src/lexer.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/lexer.rs) | Layer 6: Tokenizer & literals | 443 | `e93454c8de52` | **AUDITED** |
 | [src/parser.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/parser.rs) | Layer 6: Pratt parser & list syntax | 495 | `74c70def18fb` | **AUDITED** |
 | [src/dimension.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/dimension.rs) | Layer 1: 9-axis SI dimensions + checked ops | 283 | `8b4de38a4472` | **AUDITED** |
 | [src/quantity.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/quantity.rs) | Layer 3: Quantities & affine temps | 286 | `09ce4768e0c0` | **AUDITED** |
-| [src/units.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/units.rs) | Layer 2: Unit & currency catalog | 507 | `f67c4660af91` | **AUDITED** |
+| [src/units.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/units.rs) | Layer 2: Unit & currency catalog | 568 | `9333891c0a3b` | **AUDITED** |
 | [src/numeric/mod.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/numeric/mod.rs) | Layer 0: `NumericValue` core & casts | 109 | `384adf42175b` | **AUDITED** |
 | [src/numeric/ops.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/numeric/ops.rs) | Layer 0: Scalar & error ops | 240 | `02272bf790d5` | **AUDITED** |
 | [src/numeric/math.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/numeric/math.rs) | Layer 0: Powers & transcendentals | 227 | `62e7e194fbed` | **AUDITED** |
@@ -51,28 +52,30 @@
 | [src/eval/system.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/eval/system.rs) | Layer 5: Linear systems solver | 215 | `7e6d684e39b1` | **AUDITED** |
 | [src/eval/vector.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/src/eval/vector.rs) | Layer 5: `dot`, `cross`, `norm` | 34 | `c4be3e37d04c` | **AUDITED** |
 
-### 2.2 Tests, CI, Build, Docs & Release Artifacts (18 Files)
+### 2.2 Tests, CI, Build, Docs & Release Artifacts (20 Files)
 
 | File | Duty | Lines / Size | SHA-256 (12) | Audit Status |
 | :--- | :--- | :--- | :--- | :--- |
-| [tests/integration_tests.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/tests/integration_tests.rs) | 27 Rust integration tests | 403 lines | `e78f878e6a05` | **AUDITED** |
-| [destructive_test.sh](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/destructive_test.sh) | 470-case boundary & crash suite | 1056 lines | `91d748752fe0` | **AUDITED** |
+| [tests/integration_tests.rs](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/tests/integration_tests.rs) | 28 Rust integration tests | 439 lines | `141ed40e75a3` | **AUDITED** |
+| [destructive_test.sh](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/destructive_test.sh) | 475-case boundary & crash suite | 1061 lines | `8c464391f4e2` | **AUDITED** |
+| [install_completions.sh](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/scripts/install_completions.sh) | User shell completion installer | 42 lines | `674036cbf7f4` | **AUDITED** |
 | [benchmark_comparison.py](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/benchmark_comparison.py) | Portable CLI benchmark harness | 108 lines | `9773ce3a4a98` | **AUDITED** |
-| [package.sh](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/package.sh) | Linux x86_64 `.tar.gz`/`.deb` builder | 96 lines | `806025cf7587` | **AUDITED** |
-| [.github/workflows/ci.yml](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/.github/workflows/ci.yml) | GitHub Actions CI workflow | 55 lines | `11762e6ef4ca` | **AUDITED** |
+| [package.sh](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/package.sh) | Linux x86_64 `.tar.gz`/`.deb` builder | 103 lines | `e586d63c382b` | **AUDITED** |
+| [.github/workflows/ci.yml](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/.github/workflows/ci.yml) | GitHub Actions CI workflow | 56 lines | `a223039324ef` | **AUDITED** |
 | [.gitignore](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/.gitignore) | Git ignore patterns (`/target`, logs) | 5 lines | `add69fae8010` | **AUDITED** |
 | [AUDIT.md](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/AUDIT.md) | 2026-11-22 hardening log | 47 lines | `a31be7c2a843` | **AUDITED** |
 | [ARCHITECTURAL_REFACTORING_REPORT.md](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/docs/ARCHITECTURAL_REFACTORING_REPORT.md) | Microlithic decomposition report | 230 lines | `f0001afc883d` | **AUDITED** |
-| [Cargo.toml](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/Cargo.toml) | Crate manifest & release profile | 26 lines | `f721a8886e25` | **AUDITED (STATIC BASE)** |
-| [Cargo.lock](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/Cargo.lock) | Pinned dependency lockfile | 380 lines | `b632be92e35d` | **AUDITED (STATIC BASE)** |
+| [Cargo.toml](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/Cargo.toml) | Crate manifest & release profile | 27 lines | `d28806c2e119` | **AUDITED (STATIC BASE)** |
+| [Cargo.lock](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/Cargo.lock) | Pinned dependency lockfile | 390 lines | `a0fd6a5e4c59` | **AUDITED (STATIC BASE)** |
 | [LICENSE](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/LICENSE) | MIT license text | 21 lines | `98a4a0073f78` | **AUDITED (STATIC BASE)** |
 | [CREDITS.md](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/CREDITS.md) | Authors, pioneers & math credits | 75 lines | `ccccb5866229` | **AUDITED (STATIC BASE)** |
 | [dist/RELEASE_NOTES.md](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/dist/RELEASE_NOTES.md) | Release notes (synced checksums) | 45 lines | `0a353f2f9380` | **AUDITED (STATIC BASE)** |
-| [README.md](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/README.md) | User documentation & benchmarks | 195 lines | `b0cb7ed2c45b` | **AUDITED** |
-| [ROADMAP.md](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/ROADMAP.md) | Phased engineering milestones | 114 lines | `c4e02fdf8a64` | **AUDITED** |
-| [dist/SHA256SUMS](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/dist/SHA256SUMS) | Checksums for release packages | 2 lines | `1c7b9ee84efb` | **AUDITED** |
-| [omnicalc-v2026.11.18-linux-x86_64.tar.gz](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/dist/omnicalc-v2026.11.18-linux-x86_64.tar.gz) | Stripped tarball package | 588 KB | `d9de7ad3fc02` | **AUDITED** |
-| [omnicalc_2026.11.18_amd64.deb](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/dist/omnicalc_2026.11.18_amd64.deb) | Debian binary package | 507 KB | `a64555b06df1` | **AUDITED** |
+| [dist/man/omnicalc.1](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/dist/man/omnicalc.1) | UNIX roff manual page | 113 lines | `e8a513cd52ad` | **AUDITED** |
+| [README.md](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/README.md) | User documentation & benchmarks | 195 lines | `a4245e639a80` | **AUDITED** |
+| [ROADMAP.md](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/ROADMAP.md) | Phased engineering milestones | 114 lines | `53eb86d74939` | **AUDITED** |
+| [dist/SHA256SUMS](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/dist/SHA256SUMS) | Checksums for release packages | 2 lines | `bc07cb2a00fe` | **AUDITED** |
+| [omnicalc-v2026.11.18-linux-x86_64.tar.gz](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/dist/omnicalc-v2026.11.18-linux-x86_64.tar.gz) | Stripped tarball package | 686 KB | `025418cb8bd7` | **AUDITED** |
+| [omnicalc_2026.11.18_amd64.deb](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/dist/omnicalc_2026.11.18_amd64.deb) | Debian binary package | 586 KB | `15a1e01b3e63` | **AUDITED** |
 
 ---
 
@@ -92,6 +95,6 @@
 
 * `cargo fmt --check`: 0 diffs.
 * `cargo clippy --all-targets -- -D warnings`: 0 warnings, 0 errors.
-* `cargo test`: 27 passed, 0 failed.
-* `./destructive_test.sh`: 470 passed, 0 failed, 0 crashed (100.0%).
-* Microlithic invariant: all 19 submodules under `src/eval/`, `src/numeric/`, and `src/symbolic/` are strictly $\le 279$ lines.
+* `cargo test`: 28 passed, 0 failed.
+* `./destructive_test.sh`: 475 passed, 0 failed, 0 crashed (100.0%).
+* Microlithic invariant: all submodules under `src/eval/`, `src/numeric/`, and `src/symbolic/` are strictly $\le 279$ lines (`src/rates.rs`: 178 lines, `src/completions.rs`: 76 lines).

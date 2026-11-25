@@ -1,10 +1,13 @@
-use clap::Parser;
+use clap::{CommandFactory, Parser};
+use clap_complete::Shell;
+use omnicalc::completions::generate_completions;
 use omnicalc::eval::Evaluator;
 use omnicalc::lexer::Lexer;
 use omnicalc::parser::Parser as CalcParser;
+use omnicalc::units::UnitRegistry;
 use rustyline::DefaultEditor;
 use rustyline::error::ReadlineError;
-use std::io::{self, BufRead, IsTerminal};
+use std::io::{self, BufRead, IsTerminal, Write};
 
 #[derive(Parser, Debug)]
 #[command(name = "omnicalc")]
@@ -37,6 +40,14 @@ struct Args {
     /// Display project vision and architectural origins
     #[arg(long = "about")]
     about: bool,
+
+    /// Generate shell completion script (bash, zsh, fish, powershell, elvish)
+    #[arg(long = "completions", value_name = "SHELL")]
+    completions: Option<Shell>,
+
+    /// Fetch latest daily ECB currency rates into ~/.cache/omnicalc/rates.json
+    #[arg(long = "update-rates")]
+    update_rates: bool,
 }
 
 fn evaluate_str(
@@ -90,6 +101,26 @@ fn parse_base_str(base_str: &str) -> u32 {
 
 fn main() {
     let args = Args::parse();
+
+    if let Some(shell) = args.completions {
+        let reg = UnitRegistry::new();
+        let units = reg.all_unit_names();
+        let mut cmd = Args::command();
+        let script = generate_completions(shell, &mut cmd, &units);
+        let _ = io::stdout().write_all(&script);
+        return;
+    }
+
+    if args.update_rates {
+        match omnicalc::rates::update_rates() {
+            Ok(msg) => println!("{}", msg),
+            Err(err) => {
+                eprintln!("Error: {}", err);
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
 
     if args.credits || args.about {
         print_credits();

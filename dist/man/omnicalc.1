@@ -1,0 +1,113 @@
+.TH OMNICALC 1 "2026-11-25" "omnicalc 2026.11.18" "User Commands"
+.SH NAME
+omnicalc \- high-performance scientific CLI calculator, unit converter, and CAS
+.SH SYNOPSIS
+.B omnicalc
+[\fIOPTIONS\fR] [\fIEXPRESSION\fR...]
+.SH DESCRIPTION
+.B omnicalc
+is an offline-first scientific command-line calculator, dimensional unit converter,
+linear algebra engine, and symbolic Computer Algebra System (CAS) written in Rust.
+When invoked without an expression on a terminal, it starts an interactive REPL.
+When standard input is piped, it evaluates each non-empty, non-comment line.
+.SH OPTIONS
+.TP
+.BR \-e ", " \-\-eval " " \fIEXPR\fR
+Evaluate the specified mathematical expression directly.
+.TP
+.BR \-r ", " \-\-raw
+Print raw numeric values without unit labels or formatting decoration.
+.TP
+.BR \-b ", " \-\-base " " \fIBASE\fR
+Output integers in \fBdec\fR (default), \fBhex\fR, \fBbin\fR, or \fBoct\fR.
+.TP
+.BR \-\-completions " " \fISHELL\fR
+Generate shell completion scripts to stdout for \fBbash\fR, \fBzsh\fR, \fBfish\fR,
+\fBpowershell\fR, or \fBelvish\fR.
+.TP
+.BR \-\-update\-rates
+Opt-in network command to fetch daily European Central Bank (ECB) exchange rates
+and cache them locally to \fI~/.cache/omnicalc/rates.json\fR.
+.TP
+.BR \-\-credits ", " \-\-about
+Display authorship, acknowledgments, and architectural origins.
+.TP
+.BR \-h ", " \-\-help
+Print CLI usage summary.
+.TP
+.BR \-V ", " \-\-version
+Print package version.
+.SH OPERATOR PRECEDENCE
+From lowest to highest binding precedence:
+.TP
+.B 1. Equation & Conversion:
+\fB=\fR, \fBto\fR, \fBas\fR, \fBin\fR, \fB\->\fR
+.TP
+.B 2. Bitwise OR / XOR / AND / Shifts:
+\fB|\fR < \fB^^\fR (\fBxor\fR) < \fB&\fR < \fB<<\fR, \fB>>\fR
+.TP
+.B 3. Uncertainty:
+\fB±\fR, \fB+/-\fR (Gaussian absolute error propagation)
+.TP
+.B 4. Addition & Subtraction:
+\fB+\fR, \fB-\fR
+.TP
+.B 5. Multiplication, Division, Modulo, Percentage:
+\fB*\fR, \fB/\fR, \fB%\fR, \fBof\fR
+.TP
+.B 6. Implicit Multiplication:
+\fB2x\fR, \fB100 J / 10 s\fR (binds tighter than explicit \fB/\fR and \fB*\fR)
+.TP
+.B 7. Exponentiation & Postfix:
+\fB^\fR, \fB**\fR (right-associative), \fB%\fR (postfix), \fB'\fR (derivative)
+.SH UNITS & CONSTANTS
+Supports 200+ SI base and derived units across length, mass, time, current,
+affine temperature (\fBdegC\fR, \fBdegF\fR, \fBK\fR), energy, power, pressure,
+digital storage, data rates, and currencies (\fBUSD\fR, \fBEUR\fR, \fBGBP\fR,
+\fBJPY\fR, \fBINR\fR, \fBCAD\fR, \fBAUD\fR, \fBCHF\fR, \fBCNY\fR).
+Built-in constants: \fBpi\fR (\fBπ\fR), \fBtau\fR (\fBτ\fR), \fBphi\fR (\fBφ\fR),
+\fBe\fR, \fBc\fR (speed of light), and \fBi\fR (imaginary unit).
+.SH CALCULUS & LINEAR ALGEBRA
+.TP
+.B diff(expr[, var])
+Symbolic differentiation.
+.TP
+.B int(expr, lower, upper) / integrate(expr; lower; upper)
+Definite numerical integration via Composite Simpson's Rule.
+.TP
+.B factor(expr[, var])
+Integer prime factorization and quadratic polynomial factoring.
+.TP
+.B solve(eq[, var]) / solve([eq1, eq2, ...], [v1, v2, ...])
+Single-variable linear/quadratic/Newton-Raphson solver and multi-variable linear system solver.
+.TP
+.B Vectors & Matrices:
+Bracket syntax \fB[1, 2, 3]\fR and \fB[[1, 2], [3, 4]]\fR with \fBdot\fR, \fBcross\fR,
+\fBnorm\fR, \fBdet\fR, \fBinv\fR, and \fBtranspose\fR.
+.SH FILES
+.TP
+.I ~/.omnicalc_history
+Interactive REPL command history.
+.TP
+.I ~/.cache/omnicalc/rates.json
+Optional local ECB currency cache populated only by \fB\-\-update\-rates\fR.
+.SH EXIT STATUS
+.TP
+.B 0
+Successful evaluation or command completion.
+.TP
+.B 1
+Syntax, domain, dimensional, I/O, or evaluation error.
+.TP
+.B 2
+Invalid command-line flags or arguments.
+.SH EXAMPLES
+.nf
+omnicalc -e "100 km/h to m/s"
+omnicalc -e "20 degC - 10 degC"
+omnicalc -e "int(sin(x), 0, pi)"
+omnicalc -e "solve([2x + y = 7, x - y = 2], [x, y])"
+omnicalc --completions bash > ~/.local/share/bash-completion/completions/omnicalc
+.fi
+.SH AUTHORS
+Sagnik Rout <https://github.com/sagnikrout> and Google DeepMind Antigravity.

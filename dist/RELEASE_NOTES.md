@@ -18,7 +18,7 @@ Conceived by **Sagnik Rout** ([@sagnikrout](https://github.com/sagnikrout)), co-
 * **Gaussian Uncertainty Propagation**: Automatic absolute error propagation across all operations.
 * **Bitwise & Radix Engine**: 64-bit integer engine with binary, octal, and hexadecimal radix outputs.
 * **Deterministic Offline Currency**: Offline baseline conversions across major world currencies without network latency.
-* **Master Destructive Test Defense**: 470 automated tests passed (100% pass rate, 0 failures, 0 crashes) defending against failure archetypes cataloged across the open-source calculator ecosystem.
+* **Master Destructive Test Defense**: 475 automated tests passed (100% pass rate, 0 failures, 0 crashes) defending against failure archetypes cataloged across the open-source calculator ecosystem.
 
 ---
 
@@ -40,6 +40,6 @@ sudo ./install.sh
 
 ## Integrity Checksums (SHA-256)
 ```
-d9de7ad3fc02c60e702bd99caef3a20dc8c5bdd48fae542ef247f015ee7025e0  omnicalc-v2026.11.18-linux-x86_64.tar.gz
-a64555b06df1c6e38875e603cd8b42f3fe71e0c5a808f51db17849ca6f9f2e4e  omnicalc_2026.11.18_amd64.deb
+025418cb8bd799b9c72e1035b9cf592e973b3e49be429c5f5ffd351119227af5  omnicalc-v2026.11.18-linux-x86_64.tar.gz
+15a1e01b3e6376dd7d38cf6417e5b34c406bb3d3f2c7c522f99badd65fbbbdfe  omnicalc_2026.11.18_amd64.deb
 ```

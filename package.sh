@@ -15,7 +15,7 @@ if [[ "$(uname -s)" != Linux || "$(uname -m)" != x86_64 ]]; then
     echo "Error: this packaging script currently supports Linux x86_64 only" >&2
     exit 1
 fi
-for tool in cargo strip tar dpkg-deb sha256sum; do
+for tool in cargo strip tar dpkg-deb sha256sum gzip; do
     command -v "$tool" >/dev/null 2>&1 || {
         echo "Error: required tool '$tool' is not installed" >&2
         exit 1
@@ -39,6 +39,9 @@ mkdir -p "$TAR_ROOT"
 install -m 755 "$RELEASE_BIN" "$TAR_ROOT/$PKG_NAME"
 strip --strip-all "$TAR_ROOT/$PKG_NAME"
 cp "$SCRIPT_DIR/README.md" "$SCRIPT_DIR/LICENSE" "$TAR_ROOT/"
+if [[ -f "$SCRIPT_DIR/dist/man/omnicalc.1" ]]; then
+    cp "$SCRIPT_DIR/dist/man/omnicalc.1" "$TAR_ROOT/"
+fi
 
 cat > "$TAR_ROOT/install.sh" <<'INSTALL_EOF'
 #!/bin/sh
@@ -60,10 +63,14 @@ TAR_ARCHIVE="${PKG_NAME}-v${VERSION}-${TARGET_TRIPLE}.tar.gz"
 tar -czf "$STAGING_DIR/$TAR_ARCHIVE" -C "$STAGING_DIR" "${PKG_NAME}-v${VERSION}-${TARGET_TRIPLE}"
 
 DEB_ROOT="$STAGING_DIR/deb"
-mkdir -p "$DEB_ROOT/DEBIAN" "$DEB_ROOT/usr/bin" "$DEB_ROOT/usr/share/doc/$PKG_NAME"
+mkdir -p "$DEB_ROOT/DEBIAN" "$DEB_ROOT/usr/bin" "$DEB_ROOT/usr/share/doc/$PKG_NAME" "$DEB_ROOT/usr/share/man/man1"
 install -m 755 "$TAR_ROOT/$PKG_NAME" "$DEB_ROOT/usr/bin/$PKG_NAME"
 cp "$SCRIPT_DIR/LICENSE" "$DEB_ROOT/usr/share/doc/$PKG_NAME/copyright"
 cp "$SCRIPT_DIR/README.md" "$DEB_ROOT/usr/share/doc/$PKG_NAME/"
+if [[ -f "$SCRIPT_DIR/dist/man/omnicalc.1" ]]; then
+    gzip -c -n "$SCRIPT_DIR/dist/man/omnicalc.1" > "$DEB_ROOT/usr/share/man/man1/omnicalc.1.gz"
+    chmod 644 "$DEB_ROOT/usr/share/man/man1/omnicalc.1.gz"
+fi
 INSTALLED_SIZE="$(du -sk "$DEB_ROOT" | cut -f1)"
 cat > "$DEB_ROOT/DEBIAN/control" <<CONTROL_EOF
 Package: $PKG_NAME

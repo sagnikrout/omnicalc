@@ -73,15 +73,15 @@ Every milestone must maintain these performance and safety thresholds:
 
 ---
 
-### Milestone 3: CLI Ergonomics & Shell Polish (v0.3.0 - Planned)
-* [ ] **Native Shell Tab-Completions**:
+### Milestone 3: CLI Ergonomics & Shell Polish (v0.3.0 - Complete)
+* [x] **Native Shell Tab-Completions**:
   * Add `--completions <shell>` argument for `bash`, `zsh`, `fish`, and `powershell`.
   * Integrate `clap_complete` to auto-complete commands, options, 200+ unit names, and math functions.
-  * Write automated installer script for user shell directories.
-* [ ] **UNIX Manual Page**:
-  * Generate standard roff man page at `/home/sagnik/code/omnicalc/dist/man/omnicalc.1`.
+  * Write automated installer script for user shell directories ([scripts/install_completions.sh](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/scripts/install_completions.sh)).
+* [x] **UNIX Manual Page**:
+  * Generate standard roff man page at [dist/man/omnicalc.1](file://wsl.localhost/Ubuntu/home/sagnik/code/omnicalc/dist/man/omnicalc.1).
   * Document all syntax, precedence rules, physical constants, and exit codes.
-* [ ] **Opt-in Live Currency Updater**:
+* [x] **Opt-in Live Currency Updater**:
   * Add `--update-rates` command.
   * Fetch daily European Central Bank (ECB) XML feed on explicit operator request.
   * Cache rates to `~/.cache/omnicalc/rates.json`.

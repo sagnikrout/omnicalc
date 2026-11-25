@@ -401,3 +401,39 @@ fn test_audit_m2_hardening_guards() {
     assert!(norm_val.is_finite());
     assert!((norm_val / 5e200 - 1.0).abs() < 1e-12);
 }
+
+#[test]
+fn test_milestone3_ecb_rates_and_completions() {
+    let sample_xml = r#"
+<gesmes:Envelope>
+  <Cube>
+    <Cube time='2026-11-24'>
+      <Cube currency='USD' rate='1.0500'/>
+      <Cube currency='GBP' rate='0.8400'/>
+      <Cube currency='JPY' rate='162.75'/>
+    </Cube>
+  </Cube>
+</gesmes:Envelope>
+"#;
+    let (date, parsed) = omnicalc::rates::parse_ecb_xml(sample_xml).unwrap();
+    assert_eq!(date.as_deref(), Some("2026-11-24"));
+    assert!((parsed["USD"] - 1.0).abs() < 1e-12);
+    assert!((parsed["EUR"] - 1.05).abs() < 1e-12);
+    assert!((parsed["GBP"] - 1.25).abs() < 1e-12);
+
+    let tmp_path = std::env::temp_dir().join(format!("omnicalc_rates_{}.json", std::process::id()));
+    omnicalc::rates::write_rates_cache(&tmp_path, date.as_deref(), &parsed).unwrap();
+    let loaded = omnicalc::rates::load_cached_rates_from(&tmp_path).unwrap();
+    let _ = std::fs::remove_file(&tmp_path);
+    assert!((loaded["EUR"] - 1.05).abs() < 1e-6);
+    assert!((loaded["GBP"] - 1.25).abs() < 1e-6);
+
+    let reg = omnicalc::units::UnitRegistry::new();
+    let units = reg.all_unit_names();
+    let mut cmd = clap::Command::new("omnicalc");
+    let bash_script =
+        omnicalc::completions::generate_completions(clap_complete::Shell::Bash, &mut cmd, &units);
+    let bash_str = String::from_utf8(bash_script).unwrap();
+    assert!(bash_str.contains("omnicalc"));
+    assert!(bash_str.contains("normdist"));
+}

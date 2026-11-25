@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/badge/version-2026.11.18-blue.svg)](https://github.com/sagnikrout/omnicalc)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-470%2F470%20passed-brightgreen.svg)](destructive_test.sh)
+[![Tests](https://img.shields.io/badge/tests-475%2F475%20passed-brightgreen.svg)](destructive_test.sh)
 [![Benchmark](https://img.shields.io/badge/latency-0.80%20ms-purple.svg)](benchmark_comparison.py)
 
 ---
@@ -159,9 +159,9 @@ omnicalc> cbrt(-8)
 
 ## Verification & Test Suites
 
-The codebase is validated against 470 automated destructive tests with a 100% pass rate:
+The codebase is validated against 475 automated destructive tests with a 100% pass rate:
 
-1. **Master Destructive Test Suite (470 tests):**
+1. **Master Destructive Test Suite (475 tests):**
    ```bash
    ./destructive_test.sh
    ```
