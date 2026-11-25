@@ -20,7 +20,15 @@ impl UnitRegistry {
         let mut reg = Self {
             units: HashMap::new(),
         };
-        reg.populate_standard_units();
+        reg.populate_standard_units(true);
+        reg
+    }
+
+    pub fn new_offline() -> Self {
+        let mut reg = Self {
+            units: HashMap::new(),
+        };
+        reg.populate_standard_units(false);
         reg
     }
 
@@ -43,7 +51,7 @@ impl UnitRegistry {
         self.units.insert(name.to_string(), def);
     }
 
-    fn populate_standard_units(&mut self) {
+    fn populate_standard_units(&mut self, use_cache: bool) {
         // Length (L)
         self.add_unit("m", "meter", Dimension::LENGTH, 1.0, 0.0);
         self.add_unit("km", "kilometer", Dimension::LENGTH, 1000.0, 0.0);
@@ -324,7 +332,11 @@ impl UnitRegistry {
         // Currencies (C) - Offline baseline reference exchange rates to USD (dated November 2026).
         // Note: These rates provide offline dimensional conversion parity and approximate estimation.
         // They are static unless updated via opt-in `omnicalc --update-rates` (cached locally).
-        let cached = crate::rates::load_cached_rates();
+        let cached = if use_cache {
+            crate::rates::load_cached_rates()
+        } else {
+            None
+        };
         let rate_or = |code: &str, default_scale: f64| -> f64 {
             cached
                 .as_ref()
@@ -388,6 +400,13 @@ impl UnitRegistry {
             rate_or("CNY", 1.0 / 7.25),
             0.0,
         );
+        if let Some(ref extra_rates) = cached {
+            for (code, scale) in extra_rates {
+                if !self.units.contains_key(code) {
+                    self.add_unit(code, code, Dimension::CURRENCY, *scale, 0.0);
+                }
+            }
+        }
 
         // Common compound units
         self.add_unit("m/s", "meters_per_second", Dimension::VELOCITY, 1.0, 0.0);

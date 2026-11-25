@@ -7,6 +7,8 @@
 
 set -u
 
+export XDG_CACHE_HOME="/tmp/omnicalc_test_offline_cache_$$"
+
 if [ -z "${OMNICALC_BIN:-}" ]; then
     if [ -x "./target/release/omnicalc" ]; then
         BINARY="./target/release/omnicalc"

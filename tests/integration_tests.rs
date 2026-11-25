@@ -20,8 +20,9 @@ fn test_bandwidth_conversion() {
 
 #[test]
 fn test_currency_conversion() {
-    let res = eval_expr("1 EUR to USD").unwrap();
-    assert_eq!(res, "1.038 USD");
+    let reg = omnicalc::units::UnitRegistry::new_offline();
+    let res = reg.convert(1.0, "EUR", "USD").unwrap();
+    assert!((res - 1.038).abs() < 1e-12);
 }
 
 #[test]

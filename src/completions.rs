@@ -50,18 +50,23 @@ pub fn generate_completions(shell: Shell, cmd: &mut Command, units: &[String]) -
         Shell::Bash => {
             let joined = words.join(" ");
             let extra = format!(
-                "\n# omnicalc physical units and built-in math functions\n_omnicalc_math_words=\"{}\"\n",
+                "\n# omnicalc physical units and built-in math functions\n_omnicalc_math_words=\"{}\"\n_omnicalc_with_units() {{\n    local cur=\"${{COMP_WORDS[COMP_CWORD]}}\"\n    _omnicalc \"$@\"\n    if [[ \"${{cur}}\" != -* && \"${{COMP_WORDS[COMP_CWORD-1]:-}}\" != \"--completions\" && \"${{COMP_WORDS[COMP_CWORD-1]:-}}\" != \"-b\" && \"${{COMP_WORDS[COMP_CWORD-1]:-}}\" != \"--base\" ]]; then\n        COMPREPLY+=( $(compgen -W \"${{_omnicalc_math_words}}\" -- \"${{cur}}\") )\n    fi\n}}\ncomplete -F _omnicalc_with_units -o nosort -o bashdefault -o default omnicalc\n",
                 joined
             );
             buf.extend_from_slice(extra.as_bytes());
         }
         Shell::Zsh => {
-            let joined = words.join(" ");
-            let extra = format!(
-                "\n# omnicalc physical units and built-in math functions\n# typeset -a _omnicalc_math_words=({})\n",
-                joined
+            let mut s = String::from_utf8_lossy(&buf).into_owned();
+            s = s.replace(
+                "*::expression -- Positional expression arguments:_default",
+                "*::expression -- Positional expression arguments:_omnicalc_expr",
             );
-            buf.extend_from_slice(extra.as_bytes());
+            let joined = words.join(" ");
+            s.push_str(&format!(
+                "\n_omnicalc_expr() {{\n    local -a _omnicalc_math_words\n    _omnicalc_math_words=({})\n    _describe -t units-and-functions 'unit or function' _omnicalc_math_words\n}}\n",
+                joined
+            ));
+            buf = s.into_bytes();
         }
         Shell::Fish => {
             for w in &words {
